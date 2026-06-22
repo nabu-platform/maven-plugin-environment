@@ -17,9 +17,31 @@
 
 package be.nabu.maven.environment;
 
-import be.nabu.utils.security.EncryptionXmlAdapter;
+import java.nio.charset.StandardCharsets;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.KeySpec;
+import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.PBEParameterSpec;
 
 public class SecretCodec {
+	private static final String encryptionAlgorithm = "PBEWithMD5AndDES";
+	private static final byte[] salt = {
+		(byte) 0xc7,
+		(byte) 0x73,
+		(byte) 0x21,
+		(byte) 0x8c,
+		(byte) 0x7e,
+		(byte) 0xc8,
+		(byte) 0xee,
+		(byte) 0x99
+	};
+	private static final AlgorithmParameterSpec parameterSpec = new PBEParameterSpec(salt, 1024);
+
 	private final String secret;
 
 	public SecretCodec(String secret) {
@@ -30,36 +52,28 @@ public class SecretCodec {
 		if (value == null) {
 			return null;
 		}
-		String original = System.getProperty(EncryptionXmlAdapter.CONFIGURATION_CRYPT_KEY);
-		try {
-			System.setProperty(EncryptionXmlAdapter.CONFIGURATION_CRYPT_KEY, secret);
-			return new EncryptionXmlAdapter().marshal(value);
-		}
-		finally {
-			restore(original);
-		}
+		byte[] encrypted = getCipher(Cipher.ENCRYPT_MODE).doFinal(value.getBytes(StandardCharsets.UTF_8));
+		return "${encrypted:" + Base64.getEncoder().encodeToString(encrypted) + "}";
 	}
 
 	public String decrypt(String value) throws Exception {
 		if (value == null) {
 			return null;
 		}
-		String original = System.getProperty(EncryptionXmlAdapter.CONFIGURATION_CRYPT_KEY);
-		try {
-			System.setProperty(EncryptionXmlAdapter.CONFIGURATION_CRYPT_KEY, secret);
-			return new EncryptionXmlAdapter().unmarshal(value);
+		if (!value.startsWith("${encrypted:") || !value.endsWith("}")) {
+			return value;
 		}
-		finally {
-			restore(original);
-		}
+		byte[] decoded = Base64.getDecoder().decode(value.substring(12, value.length() - 1).getBytes(StandardCharsets.US_ASCII));
+		byte[] decrypted = getCipher(Cipher.DECRYPT_MODE).doFinal(decoded);
+		return new String(decrypted, StandardCharsets.UTF_8);
 	}
 
-	private void restore(String original) {
-		if (original == null) {
-			System.clearProperty(EncryptionXmlAdapter.CONFIGURATION_CRYPT_KEY);
-		}
-		else {
-			System.setProperty(EncryptionXmlAdapter.CONFIGURATION_CRYPT_KEY, original);
-		}
+	private Cipher getCipher(int mode) throws Exception {
+		SecretKeyFactory factory = SecretKeyFactory.getInstance(encryptionAlgorithm);
+		KeySpec keySpec = new PBEKeySpec(secret.toCharArray());
+		SecretKey key = factory.generateSecret(keySpec);
+		Cipher cipher = Cipher.getInstance(encryptionAlgorithm);
+		cipher.init(mode, key, parameterSpec);
+		return cipher;
 	}
 }
