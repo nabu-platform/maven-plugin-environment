@@ -18,13 +18,10 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class WafArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "waf.xml");
@@ -36,7 +33,12 @@ public class WafArtifactHandler extends AbstractXmlArtifactHandler {
 		XPath xpath = newXPath();
 		replaceNodeValue(context, node(xpath, document, "/waf/baseHost/text()"), value(context, "baseHost"), false);
 		replaceNodeValue(context, node(xpath, document, "/waf/server/text()"), value(context, "server"), false);
-		replaceNodeValue(context, node(xpath, document, "/waf/redirectServer/text()"), value(context, "redirectServer"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/waf/redirectServer/text()"),
+			value(context, "redirectServer"),
+			false
+		);
 		write(document, new File(context.getOutputDirectory(), "waf.xml"));
 	}
 }

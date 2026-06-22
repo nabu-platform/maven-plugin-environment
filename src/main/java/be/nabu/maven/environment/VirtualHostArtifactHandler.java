@@ -19,13 +19,10 @@ package be.nabu.maven.environment;
 
 import java.io.File;
 import java.util.List;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class VirtualHostArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "virtual-host.xml");
@@ -38,14 +35,54 @@ public class VirtualHostArtifactHandler extends AbstractXmlArtifactHandler {
 		replaceNodeValue(context, node(xpath, document, "/virtualHost/host/text()"), value(context, "host"), false);
 		replaceNodeValue(context, node(xpath, document, "/virtualHost/server/text()"), value(context, "server"), false);
 		replaceNodeValue(context, node(xpath, document, "/virtualHost/keyAlias/text()"), value(context, "keyAlias"), false);
-		replaceNodeValue(context, node(xpath, document, "/virtualHost/enableHsts/text()"), value(context, "enableHsts"), false);
-		replaceNodeValue(context, node(xpath, document, "/virtualHost/hstsPreload/text()"), value(context, "hstsPreload"), false);
-		replaceNodeValue(context, node(xpath, document, "/virtualHost/hstsSubDomains/text()"), value(context, "hstsSubDomains"), false);
-		replaceNodeValue(context, node(xpath, document, "/virtualHost/hstsMaxAge/text()"), value(context, "hstsMaxAge"), false);
-		replaceNodeValue(context, node(xpath, document, "/virtualHost/captureErrors/text()"), value(context, "captureErrors"), false);
-		replaceNodeValue(context, node(xpath, document, "/virtualHost/captureSuccessful/text()"), value(context, "captureSuccessful"), false);
-		replaceNodeValue(context, node(xpath, document, "/virtualHost/enableRangeSupport/text()"), value(context, "enableRangeSupport"), false);
-		replaceNodeValue(context, node(xpath, document, "/virtualHost/enableCompression/text()"), value(context, "enableCompression"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/virtualHost/enableHsts/text()"),
+			value(context, "enableHsts"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/virtualHost/hstsPreload/text()"),
+			value(context, "hstsPreload"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/virtualHost/hstsSubDomains/text()"),
+			value(context, "hstsSubDomains"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/virtualHost/hstsMaxAge/text()"),
+			value(context, "hstsMaxAge"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/virtualHost/captureErrors/text()"),
+			value(context, "captureErrors"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/virtualHost/captureSuccessful/text()"),
+			value(context, "captureSuccessful"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/virtualHost/enableRangeSupport/text()"),
+			value(context, "enableRangeSupport"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/virtualHost/enableCompression/text()"),
+			value(context, "enableCompression"),
+			false
+		);
 		applyList(context, document, xpath, "aliases");
 		applyList(context, document, xpath, "redirectAliases");
 		write(document, new File(context.getOutputDirectory(), "virtual-host.xml"));
@@ -57,7 +94,12 @@ public class VirtualHostArtifactHandler extends AbstractXmlArtifactHandler {
 			return;
 		}
 		for (int i = 0; i < list.size(); i++) {
-			replaceNodeValue(context, node(xpath, document, "/virtualHost/" + key + "[" + (i + 1) + "]/text()"), list.get(i), false);
+			replaceNodeValue(
+				context,
+				node(xpath, document, "/virtualHost/" + key + "[" + (i + 1) + "]/text()"),
+				list.get(i),
+				false
+			);
 		}
 	}
 }

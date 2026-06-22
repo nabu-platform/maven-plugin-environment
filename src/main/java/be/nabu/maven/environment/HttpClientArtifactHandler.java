@@ -18,13 +18,10 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class HttpClientArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "http-client.xml");
@@ -37,14 +34,54 @@ public class HttpClientArtifactHandler extends AbstractXmlArtifactHandler {
 		replaceNodeValue(context, node(xpath, document, "/httpClient/type/text()"), value(context, "type"), false);
 		replaceNodeValue(context, node(xpath, document, "/httpClient/static/text()"), value(context, "static"), false);
 		replaceNodeValue(context, node(xpath, document, "/httpClient/keystore/text()"), value(context, "keystore"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpClient/sslContextType/text()"), value(context, "sslContextType"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpClient/captureErrors/text()"), value(context, "captureErrors"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpClient/captureSuccessful/text()"), value(context, "captureSuccessful"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpClient/ioPoolSize/text()"), value(context, "ioPoolSize"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpClient/processPoolSize/text()"), value(context, "processPoolSize"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpClient/connectionTimeout/text()"), value(context, "connectionTimeout"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpClient/socketTimeout/text()"), value(context, "socketTimeout"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpClient/maxAmountOfConnectionsPerTarget/text()"), value(context, "maxAmountOfConnectionsPerTarget"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/httpClient/sslContextType/text()"),
+			value(context, "sslContextType"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/httpClient/captureErrors/text()"),
+			value(context, "captureErrors"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/httpClient/captureSuccessful/text()"),
+			value(context, "captureSuccessful"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/httpClient/ioPoolSize/text()"),
+			value(context, "ioPoolSize"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/httpClient/processPoolSize/text()"),
+			value(context, "processPoolSize"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/httpClient/connectionTimeout/text()"),
+			value(context, "connectionTimeout"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/httpClient/socketTimeout/text()"),
+			value(context, "socketTimeout"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/httpClient/maxAmountOfConnectionsPerTarget/text()"),
+			value(context, "maxAmountOfConnectionsPerTarget"),
+			false
+		);
 		write(document, new File(context.getOutputDirectory(), "http-client.xml"));
 	}
 }

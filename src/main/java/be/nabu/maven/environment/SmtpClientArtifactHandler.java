@@ -19,13 +19,10 @@ package be.nabu.maven.environment;
 
 import java.io.File;
 import java.util.List;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class SmtpClientArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "smtp-server.xml");
@@ -38,19 +35,54 @@ public class SmtpClientArtifactHandler extends AbstractXmlArtifactHandler {
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/host/text()"), value(context, "host"), false);
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/port/text()"), value(context, "port"), false);
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/from/text()"), value(context, "from"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/subjectTemplate/text()"), value(context, "subjectTemplate"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/clientHost/text()"), value(context, "clientHost"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/smtpClient/subjectTemplate/text()"),
+			value(context, "subjectTemplate"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/smtpClient/clientHost/text()"),
+			value(context, "clientHost"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/charset/text()"), value(context, "charset"), false);
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/username/text()"), value(context, "username"), false);
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/password/text()"), value(context, "password"), true);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/loginMethod/text()"), value(context, "loginMethod"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/implicitSSL/text()"), value(context, "implicitSSL"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/smtpClient/loginMethod/text()"),
+			value(context, "loginMethod"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/smtpClient/implicitSSL/text()"),
+			value(context, "implicitSSL"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/startTls/text()"), value(context, "startTls"), false);
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/keystore/text()"), value(context, "keystore"), false);
 		replaceNodeValue(context, node(xpath, document, "/smtpClient/blacklist/text()"), value(context, "blacklist"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/overrideToInMime/text()"), value(context, "overrideToInMime"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/connectionTimeout/text()"), value(context, "connectionTimeout"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/socketTimeout/text()"), value(context, "socketTimeout"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/smtpClient/overrideToInMime/text()"),
+			value(context, "overrideToInMime"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/smtpClient/connectionTimeout/text()"),
+			value(context, "connectionTimeout"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/smtpClient/socketTimeout/text()"),
+			value(context, "socketTimeout"),
+			false
+		);
 		applyList(context, document, xpath, "bcc");
 		applyList(context, document, xpath, "overrideTo");
 		write(document, new File(context.getOutputDirectory(), "smtp-server.xml"));
@@ -62,7 +94,12 @@ public class SmtpClientArtifactHandler extends AbstractXmlArtifactHandler {
 			return;
 		}
 		for (int i = 0; i < list.size(); i++) {
-			replaceNodeValue(context, node(xpath, document, "/smtpClient/" + key + "[" + (i + 1) + "]/text()"), list.get(i), false);
+			replaceNodeValue(
+				context,
+				node(xpath, document, "/smtpClient/" + key + "[" + (i + 1) + "]/text()"),
+				list.get(i),
+				false
+			);
 		}
 	}
 }

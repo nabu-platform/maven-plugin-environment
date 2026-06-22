@@ -18,7 +18,6 @@
 package be.nabu.maven.environment;
 
 public class ArtifactHandlerException extends Exception {
-
 	private static final long serialVersionUID = 1L;
 
 	public ArtifactHandlerException(String message) {

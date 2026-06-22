@@ -18,13 +18,10 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class RestClientArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "rest-client.xml");
@@ -37,7 +34,12 @@ public class RestClientArtifactHandler extends AbstractXmlArtifactHandler {
 		replaceNodeValue(context, node(xpath, document, "/restClient/host/text()"), value(context, "host"), false);
 		replaceNodeValue(context, node(xpath, document, "/restClient/path/text()"), value(context, "path"), false);
 		replaceNodeValue(context, node(xpath, document, "/restClient/secure/text()"), value(context, "secure"), false);
-		replaceNodeValue(context, node(xpath, document, "/restClient/httpClient/text()"), value(context, "httpClient"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/restClient/httpClient/text()"),
+			value(context, "httpClient"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/restClient/username/text()"), value(context, "username"), false);
 		replaceNodeValue(context, node(xpath, document, "/restClient/password/text()"), value(context, "password"), false);
 		replaceNodeValue(context, node(xpath, document, "/restClient/gzip/text()"), value(context, "gzip"), false);

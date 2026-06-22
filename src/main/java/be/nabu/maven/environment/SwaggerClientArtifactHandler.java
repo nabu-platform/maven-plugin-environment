@@ -19,13 +19,10 @@ package be.nabu.maven.environment;
 
 import java.io.File;
 import java.util.List;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class SwaggerClientArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "swagger-client.xml");
@@ -36,19 +33,74 @@ public class SwaggerClientArtifactHandler extends AbstractXmlArtifactHandler {
 		Document document = parse(input);
 		XPath xpath = newXPath();
 		replaceNodeValue(context, node(xpath, document, "/swaggerClient/host/text()"), value(context, "host"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/basePath/text()"), value(context, "basePath"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/basePath/text()"),
+			value(context, "basePath"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/swaggerClient/scheme/text()"), value(context, "scheme"), false);
 		replaceNodeValue(context, node(xpath, document, "/swaggerClient/charset/text()"), value(context, "charset"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/httpClient/text()"), value(context, "httpClient"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/username/text()"), value(context, "username"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/password/text()"), value(context, "password"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/allowDomain/text()"), value(context, "allowDomain"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/apiHeaderName/text()"), value(context, "apiHeaderName"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/apiQueryName/text()"), value(context, "apiQueryName"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/apiQueryKey/text()"), value(context, "apiQueryKey"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/apiHeaderKey/text()"), value(context, "apiHeaderKey"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/bearerToken/text()"), value(context, "bearerToken"), false);
-		replaceNodeValue(context, node(xpath, document, "/swaggerClient/supportGzip/text()"), value(context, "supportGzip"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/httpClient/text()"),
+			value(context, "httpClient"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/username/text()"),
+			value(context, "username"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/password/text()"),
+			value(context, "password"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/allowDomain/text()"),
+			value(context, "allowDomain"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/apiHeaderName/text()"),
+			value(context, "apiHeaderName"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/apiQueryName/text()"),
+			value(context, "apiQueryName"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/apiQueryKey/text()"),
+			value(context, "apiQueryKey"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/apiHeaderKey/text()"),
+			value(context, "apiHeaderKey"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/bearerToken/text()"),
+			value(context, "bearerToken"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/swaggerClient/supportGzip/text()"),
+			value(context, "supportGzip"),
+			false
+		);
 		applySecurity(context, document, xpath);
 		write(document, new File(context.getOutputDirectory(), "swagger-client.xml"));
 	}
@@ -59,7 +111,12 @@ public class SwaggerClientArtifactHandler extends AbstractXmlArtifactHandler {
 			return;
 		}
 		for (int i = 0; i < security.size(); i++) {
-			replaceNodeValue(context, node(xpath, document, "/swaggerClient/security[" + (i + 1) + "]/text()"), security.get(i), false);
+			replaceNodeValue(
+				context,
+				node(xpath, document, "/swaggerClient/security[" + (i + 1) + "]/text()"),
+				security.get(i),
+				false
+			);
 		}
 	}
 }

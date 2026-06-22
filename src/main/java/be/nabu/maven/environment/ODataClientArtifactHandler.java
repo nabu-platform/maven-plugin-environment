@@ -18,13 +18,10 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class ODataClientArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "odata-client.xml");
@@ -35,8 +32,18 @@ public class ODataClientArtifactHandler extends AbstractXmlArtifactHandler {
 		Document document = parse(input);
 		XPath xpath = newXPath();
 		replaceNodeValue(context, node(xpath, document, "/odataClient/endpoint/text()"), value(context, "endpoint"), false);
-		replaceNodeValue(context, node(xpath, document, "/odataClient/securityType/text()"), value(context, "securityType"), false);
-		replaceNodeValue(context, node(xpath, document, "/odataClient/securityContext/text()"), value(context, "securityContext"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/odataClient/securityType/text()"),
+			value(context, "securityType"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/odataClient/securityContext/text()"),
+			value(context, "securityContext"),
+			false
+		);
 		write(document, new File(context.getOutputDirectory(), "odata-client.xml"));
 	}
 }

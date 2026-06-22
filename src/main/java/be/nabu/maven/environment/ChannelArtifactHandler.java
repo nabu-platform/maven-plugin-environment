@@ -19,13 +19,10 @@ package be.nabu.maven.environment;
 
 import java.io.File;
 import java.util.Map;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class ChannelArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "channel.xml");
@@ -35,11 +32,17 @@ public class ChannelArtifactHandler extends AbstractXmlArtifactHandler {
 		}
 		Document document = parse(input);
 		XPath xpath = newXPath();
-		for (Map.Entry<String, String> entry : context.getValues().entrySet()) {
+		for (Map.Entry<String, String> entry : context.getValues()
+			.entrySet()) {
 			if (entry.getKey().contains(".") || entry.getKey().endsWith("]")) {
 				continue;
 			}
-			replaceNodeValue(context, node(xpath, document, "/channel/properties/property[@key='" + entry.getKey() + "']/text()"), entry.getValue(), false);
+			replaceNodeValue(
+				context,
+				node(xpath, document, "/channel/properties/property[@key='" + entry.getKey() + "']/text()"),
+				entry.getValue(),
+				false
+			);
 		}
 		write(document, new File(context.getOutputDirectory(), "channel.xml"));
 	}

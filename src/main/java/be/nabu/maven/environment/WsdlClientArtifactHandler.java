@@ -18,13 +18,10 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class WsdlClientArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "wsdl-client.xml");
@@ -36,7 +33,12 @@ public class WsdlClientArtifactHandler extends AbstractXmlArtifactHandler {
 		XPath xpath = newXPath();
 		replaceNodeValue(context, node(xpath, document, "/wsdlClient/endpoint/text()"), value(context, "endpoint"), false);
 		replaceNodeValue(context, node(xpath, document, "/wsdlClient/charset/text()"), value(context, "charset"), false);
-		replaceNodeValue(context, node(xpath, document, "/wsdlClient/httpClient/text()"), value(context, "httpClient"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/wsdlClient/httpClient/text()"),
+			value(context, "httpClient"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/wsdlClient/username/text()"), value(context, "username"), false);
 		replaceNodeValue(context, node(xpath, document, "/wsdlClient/password/text()"), value(context, "password"), false);
 		write(document, new File(context.getOutputDirectory(), "wsdl-client.xml"));

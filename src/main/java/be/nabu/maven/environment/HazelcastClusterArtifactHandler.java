@@ -18,13 +18,10 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class HazelcastClusterArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "hazelcast-cluster.xml");
@@ -35,10 +32,30 @@ public class HazelcastClusterArtifactHandler extends AbstractXmlArtifactHandler 
 		Document document = parse(input);
 		XPath xpath = newXPath();
 		replaceNodeValue(context, node(xpath, document, "/hazelcastCluster/port/text()"), value(context, "port"), false);
-		replaceNodeValue(context, node(xpath, document, "/hazelcastCluster/hazelcastPort/text()"), value(context, "hazelcastPort"), false);
-		replaceNodeValue(context, node(xpath, document, "/hazelcastCluster/amazonTagKey/text()"), value(context, "amazonTagKey"), false);
-		replaceNodeValue(context, node(xpath, document, "/hazelcastCluster/amazonTagValue/text()"), value(context, "amazonTagValue"), false);
-		replaceNodeValue(context, node(xpath, document, "/hazelcastCluster/amazonRegion/text()"), value(context, "amazonRegion"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/hazelcastCluster/hazelcastPort/text()"),
+			value(context, "hazelcastPort"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/hazelcastCluster/amazonTagKey/text()"),
+			value(context, "amazonTagKey"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/hazelcastCluster/amazonTagValue/text()"),
+			value(context, "amazonTagValue"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/hazelcastCluster/amazonRegion/text()"),
+			value(context, "amazonRegion"),
+			false
+		);
 		write(document, new File(context.getOutputDirectory(), "hazelcast-cluster.xml"));
 	}
 }

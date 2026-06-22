@@ -20,11 +20,9 @@ package be.nabu.maven.environment;
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
-
 import org.apache.maven.plugin.logging.Log;
 
 public class EnvironmentBuildContext {
-
 	private final File projectDirectory;
 	private final File outputDirectory;
 	private final String environmentName;
@@ -33,7 +31,14 @@ public class EnvironmentBuildContext {
 	private final Map<String, String> options;
 	private final Log log;
 
-	public EnvironmentBuildContext(File projectDirectory, File outputDirectory, String environmentName, Map<String, String> values, SecretCodec secretCodec, Map<String, String> options, Log log) {
+	public EnvironmentBuildContext(
+			File projectDirectory,
+			File outputDirectory,
+			String environmentName,
+			Map<String, String> values,
+			SecretCodec secretCodec,
+			Map<String, String> options,
+			Log log) {
 		this.projectDirectory = projectDirectory;
 		this.outputDirectory = outputDirectory;
 		this.environmentName = environmentName;

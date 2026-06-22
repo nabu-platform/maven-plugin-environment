@@ -22,13 +22,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public abstract class AbstractXmlArtifactHandler implements ArtifactHandler {
-
 	protected Document parse(File input) throws ArtifactHandlerException {
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

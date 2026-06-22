@@ -20,7 +20,6 @@ package be.nabu.maven.environment;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
@@ -36,12 +35,10 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.maven.plugin.logging.Log;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GitLabEnvironmentValueProvider implements EnvironmentValueWriter, ConfigurableEnvironmentValueProvider {
-
 	private String baseUrl;
 	private String projectId;
 	private String token;
@@ -70,7 +67,7 @@ public class GitLabEnvironmentValueProvider implements EnvironmentValueWriter, C
 					throw new IllegalStateException("GitLab variable lookup failed with status " + response.getCode() + ": " + body);
 				}
 				Map<String, String> values = new LinkedHashMap<String, String>();
-				List<Map<String, Object>> variables = objectMapper.readValue(body, new TypeReference<List<Map<String, Object>>>() { });
+				List<Map<String, Object>> variables = objectMapper.readValue(body, new TypeReference<List<Map<String, Object>>>() {});
 				for (Map<String, Object> variable : variables) {
 					String scope = stringValue(variable.get("environment_scope"));
 					if (!environmentMatches(environmentName, scope)) {

@@ -18,7 +18,6 @@
 package be.nabu.maven.environment;
 
 public class DefinitionField {
-
 	private final String path;
 	private final boolean list;
 	private final boolean environmentSpecific;

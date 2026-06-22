@@ -23,16 +23,13 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class EnvironmentValues {
-
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private EnvironmentValues() {
-	}
+	private EnvironmentValues() {}
 
 	public static String scalar(EnvironmentBuildContext context, String key) {
 		return context.getValues().get(key);
@@ -44,7 +41,7 @@ public final class EnvironmentValues {
 			String trimmed = value.trim();
 			if (trimmed.startsWith("[")) {
 				try {
-					return OBJECT_MAPPER.readValue(trimmed, new TypeReference<List<String>>() { });
+					return OBJECT_MAPPER.readValue(trimmed, new TypeReference<List<String>>() {});
 				}
 				catch (Exception e) {
 					throw new ArtifactHandlerException("Invalid JSON array for key: " + key, e);
@@ -54,12 +51,15 @@ public final class EnvironmentValues {
 		Map<Integer, String> indexed = indexedValues(context.getValues(), key);
 		if (!indexed.isEmpty()) {
 			List<Map.Entry<Integer, String>> entries = new ArrayList<Map.Entry<Integer, String>>(indexed.entrySet());
-			Collections.sort(entries, new Comparator<Map.Entry<Integer, String>>() {
-				@Override
-				public int compare(Map.Entry<Integer, String> left, Map.Entry<Integer, String> right) {
-					return left.getKey().compareTo(right.getKey());
+			Collections.sort(
+				entries,
+				new Comparator<Map.Entry<Integer, String>>() {
+					@Override
+					public int compare(Map.Entry<Integer, String> left, Map.Entry<Integer, String> right) {
+						return left.getKey().compareTo(right.getKey());
+					}
 				}
-			});
+			);
 			List<String> result = new ArrayList<String>();
 			for (Map.Entry<Integer, String> entry : entries) {
 				result.add(entry.getValue());

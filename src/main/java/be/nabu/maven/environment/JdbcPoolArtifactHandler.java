@@ -18,13 +18,10 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class JdbcPoolArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "jdbcPool.xml");
@@ -36,14 +33,39 @@ public class JdbcPoolArtifactHandler extends AbstractXmlArtifactHandler {
 		XPath xpath = newXPath();
 		replaceNodeValue(context, node(xpath, document, "/jdbcPool/poolProxy/text()"), value(context, "poolProxy"), false);
 		replaceNodeValue(context, node(xpath, document, "/jdbcPool/jdbcUrl/text()"), value(context, "jdbcUrl"), false);
-		replaceNodeValue(context, node(xpath, document, "/jdbcPool/driverClassName/text()"), value(context, "driverClassName"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/jdbcPool/driverClassName/text()"),
+			value(context, "driverClassName"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/jdbcPool/dialect/text()"), value(context, "dialect"), false);
 		replaceNodeValue(context, node(xpath, document, "/jdbcPool/username/text()"), value(context, "username"), false);
 		replaceNodeValue(context, node(xpath, document, "/jdbcPool/password/text()"), value(context, "password"), true);
-		replaceNodeValue(context, node(xpath, document, "/jdbcPool/maximumPoolSize/text()"), value(context, "maximumPoolSize"), false);
-		replaceNodeValue(context, node(xpath, document, "/jdbcPool/minimumIdle/text()"), value(context, "minimumIdle"), false);
-		replaceNodeValue(context, node(xpath, document, "/jdbcPool/connectionTimeout/text()"), value(context, "connectionTimeout"), false);
-		replaceNodeValue(context, node(xpath, document, "/jdbcPool/idleTimeout/text()"), value(context, "idleTimeout"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/jdbcPool/maximumPoolSize/text()"),
+			value(context, "maximumPoolSize"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/jdbcPool/minimumIdle/text()"),
+			value(context, "minimumIdle"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/jdbcPool/connectionTimeout/text()"),
+			value(context, "connectionTimeout"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/jdbcPool/idleTimeout/text()"),
+			value(context, "idleTimeout"),
+			false
+		);
 		write(document, new File(context.getOutputDirectory(), "jdbcPool.xml"));
 	}
 }

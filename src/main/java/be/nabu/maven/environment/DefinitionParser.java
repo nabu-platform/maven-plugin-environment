@@ -18,20 +18,16 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public final class DefinitionParser {
-
-	private DefinitionParser() {
-	}
+	private DefinitionParser() {}
 
 	public static DefinitionModel parse(File definitionFile) throws ArtifactHandlerException {
 		try {
@@ -50,7 +46,12 @@ public final class DefinitionParser {
 		}
 	}
 
-	private static void walk(Node node, String parentPath, boolean inheritedEnvironmentSpecific, DefinitionModel model, XPath xpath) throws Exception {
+	private static void walk(
+			Node node,
+			String parentPath,
+			boolean inheritedEnvironmentSpecific,
+			DefinitionModel model,
+			XPath xpath) throws Exception {
 		String name = attribute(node, "name");
 		String path = name == null || name.isEmpty() ? parentPath : parentPath == null ? name : parentPath + "/" + name;
 		boolean list = isList(node);
@@ -58,7 +59,11 @@ public final class DefinitionParser {
 		if (path != null && !path.isEmpty()) {
 			model.addField(new DefinitionField(path, list, environmentSpecific));
 		}
-		NodeList children = (NodeList) xpath.evaluate("./*[local-name()='element' or local-name()='field' or local-name()='entry']", node, XPathConstants.NODESET);
+		NodeList children = (NodeList) xpath.evaluate(
+			"./*[local-name()='element' or local-name()='field' or local-name()='entry']",
+			node,
+			XPathConstants.NODESET
+		);
 		for (int i = 0; i < children.getLength(); i++) {
 			walk(children.item(i), path, environmentSpecific, model, xpath);
 		}
@@ -82,7 +87,10 @@ public final class DefinitionParser {
 	}
 
 	private static String attribute(Node node, String name) {
-		return node.getAttributes() == null || node.getAttributes().getNamedItem(name) == null ? null : node.getAttributes().getNamedItem(name).getNodeValue();
+		return node.getAttributes() == null
+				|| node.getAttributes().getNamedItem(name) == null
+			? null
+			: node.getAttributes().getNamedItem(name).getNodeValue();
 	}
 
 	private static int parseInteger(String value) {

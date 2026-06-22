@@ -18,7 +18,6 @@
 package be.nabu.maven.environment;
 
 import java.util.Map;
-
 import org.apache.maven.plugin.logging.Log;
 
 public interface ConfigurableEnvironmentValueProvider extends EnvironmentValueProvider {

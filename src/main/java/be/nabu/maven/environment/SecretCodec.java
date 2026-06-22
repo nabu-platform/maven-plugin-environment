@@ -20,7 +20,6 @@ package be.nabu.maven.environment;
 import be.nabu.utils.security.EncryptionXmlAdapter;
 
 public class SecretCodec {
-
 	private final String secret;
 
 	public SecretCodec(String secret) {

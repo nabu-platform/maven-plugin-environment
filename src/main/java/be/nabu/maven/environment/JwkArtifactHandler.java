@@ -19,13 +19,10 @@ package be.nabu.maven.environment;
 
 import java.io.File;
 import java.util.List;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class JwkArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "jwk.xml");

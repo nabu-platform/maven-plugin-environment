@@ -23,14 +23,11 @@ import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.xml.xpath.XPath;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.w3c.dom.Document;
 
 public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
-
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	@Override
@@ -48,7 +45,12 @@ public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
 		}
 		Document document = parse(input);
 		XPath xpath = newXPath();
-		replaceNodeValue(context, node(xpath, document, "/webartifact/virtualHost/text()"), value(context, "virtualHost"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/webartifact/virtualHost/text()"),
+			value(context, "virtualHost"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/webartifact/path/text()"), value(context, "path"), false);
 		write(document, new File(context.getOutputDirectory(), "webartifact.xml"));
 	}
@@ -63,7 +65,8 @@ public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
 		XPath xpath = newXPath();
 		Map<String, DefinitionModel> definitions = loadFragmentDefinitions(context);
 		Map<String, String> fragmentScalars = new LinkedHashMap<String, String>();
-		for (Map.Entry<String, String> entry : context.getValues().entrySet()) {
+		for (Map.Entry<String, String> entry : context.getValues()
+			.entrySet()) {
 			if (!entry.getKey().startsWith("fragment.")) {
 				continue;
 			}
@@ -83,12 +86,32 @@ public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
 					List<String> list = EnvironmentValues.list(context, "fragment." + entry.getKey(), true);
 					if (list != null) {
 						for (int i = 0; i < list.size(); i++) {
-							replaceNodeValue(context, node(xpath, document, "/fragments/parts[type='" + definitionEntry.getKey() + "']/configuration/property[@key='" + entry.getKey() + "'][" + (i + 1) + "]/@value"), list.get(i), false);
+							replaceNodeValue(
+								context,
+								node(
+									xpath,
+									document,
+									"/fragments/parts[type='" + definitionEntry.getKey() + "']/configuration/property[@key='"
+										+ entry.getKey() + "'][" + (i + 1) + "]/@value"
+								),
+								list.get(i),
+								false
+							);
 						}
 					}
 				}
 				else {
-					replaceNodeValue(context, node(xpath, document, "/fragments/parts[type='" + definitionEntry.getKey() + "']/configuration/property[@key='" + entry.getKey() + "']/@value"), entry.getValue(), false);
+					replaceNodeValue(
+						context,
+						node(
+							xpath,
+							document,
+							"/fragments/parts[type='" + definitionEntry.getKey() + "']/configuration/property[@key='"
+								+ entry.getKey() + "']/@value"
+						),
+						entry.getValue(),
+						false
+					);
 				}
 			}
 		}
@@ -101,7 +124,8 @@ public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
 		}
 		File pagesDirectory = new File(context.getProjectDirectory(), "public/artifacts/pages");
 		if (!pagesDirectory.isDirectory()) {
-			context.getLog().debug("Skipping web application page json minification, directory not found: " + pagesDirectory);
+			context.getLog()
+				.debug("Skipping web application page json minification, directory not found: " + pagesDirectory);
 			return;
 		}
 		File outputPagesDirectory = new File(context.getOutputDirectory(), "public/artifacts/pages");
@@ -120,7 +144,11 @@ public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
 	private void minifyJsonFile(File input, File output) throws ArtifactHandlerException {
 		try {
 			Object parsed = OBJECT_MAPPER.readValue(input, Object.class);
-			if (output.getParentFile() != null && !output.getParentFile().exists() && !output.getParentFile().mkdirs()) {
+			if (output.getParentFile() != null
+					&& !output.getParentFile()
+						.exists()
+					&& !output.getParentFile()
+						.mkdirs()) {
 				throw new ArtifactHandlerException("Could not create output directory for " + output);
 			}
 			Files.write(output.toPath(), OBJECT_MAPPER.writeValueAsString(parsed).getBytes(StandardCharsets.UTF_8));

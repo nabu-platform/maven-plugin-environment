@@ -21,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DefinitionModel {
-
 	private final Map<String, DefinitionField> fields = new LinkedHashMap<String, DefinitionField>();
 
 	public Map<String, DefinitionField> getFields() {

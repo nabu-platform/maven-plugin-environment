@@ -21,15 +21,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class FeatureSetArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "feature-set.xml");
@@ -41,7 +38,8 @@ public class FeatureSetArtifactHandler extends AbstractXmlArtifactHandler {
 		XPath xpath = newXPath();
 		List<String> enabled = values(xpath, document, "/featureSet/features/text()");
 		List<String> disabled = values(xpath, document, "/featureSet/disabled/text()");
-		for (Map.Entry<String, String> entry : context.getValues().entrySet()) {
+		for (Map.Entry<String, String> entry : context.getValues()
+			.entrySet()) {
 			String setting = entry.getValue();
 			if (!"true".equalsIgnoreCase(setting) && !"false".equalsIgnoreCase(setting)) {
 				continue;

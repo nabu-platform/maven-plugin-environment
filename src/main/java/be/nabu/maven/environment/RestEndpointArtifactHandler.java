@@ -18,13 +18,10 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-
 import javax.xml.xpath.XPath;
-
 import org.w3c.dom.Document;
 
 public class RestEndpointArtifactHandler extends AbstractXmlArtifactHandler {
-
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		File input = new File(context.getProjectDirectory(), "rest-endpoint.xml");
@@ -37,13 +34,38 @@ public class RestEndpointArtifactHandler extends AbstractXmlArtifactHandler {
 		replaceNodeValue(context, node(xpath, document, "/restEndpoint/host/text()"), value(context, "host"), false);
 		replaceNodeValue(context, node(xpath, document, "/restEndpoint/basePath/text()"), value(context, "basePath"), false);
 		replaceNodeValue(context, node(xpath, document, "/restEndpoint/secure/text()"), value(context, "secure"), false);
-		replaceNodeValue(context, node(xpath, document, "/restEndpoint/httpClient/text()"), value(context, "httpClient"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/restEndpoint/httpClient/text()"),
+			value(context, "httpClient"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/restEndpoint/username/text()"), value(context, "username"), false);
 		replaceNodeValue(context, node(xpath, document, "/restEndpoint/password/text()"), value(context, "password"), false);
-		replaceNodeValue(context, node(xpath, document, "/restEndpoint/apiHeaderName/text()"), value(context, "apiHeaderName"), false);
-		replaceNodeValue(context, node(xpath, document, "/restEndpoint/apiQueryName/text()"), value(context, "apiQueryName"), false);
-		replaceNodeValue(context, node(xpath, document, "/restEndpoint/apiQueryKey/text()"), value(context, "apiQueryKey"), false);
-		replaceNodeValue(context, node(xpath, document, "/restEndpoint/apiHeaderKey/text()"), value(context, "apiHeaderKey"), false);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/restEndpoint/apiHeaderName/text()"),
+			value(context, "apiHeaderName"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/restEndpoint/apiQueryName/text()"),
+			value(context, "apiQueryName"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/restEndpoint/apiQueryKey/text()"),
+			value(context, "apiQueryKey"),
+			false
+		);
+		replaceNodeValue(
+			context,
+			node(xpath, document, "/restEndpoint/apiHeaderKey/text()"),
+			value(context, "apiHeaderKey"),
+			false
+		);
 		replaceNodeValue(context, node(xpath, document, "/restEndpoint/gzip/text()"), value(context, "gzip"), false);
 		write(document, new File(context.getOutputDirectory(), "rest-endpoint.xml"));
 	}
