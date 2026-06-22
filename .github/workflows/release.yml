@@ -1,0 +1,130 @@
+name: Release plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      - name: Configure Maven GitHub access
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.m2"
+          if [ -f "$HOME/.m2/settings.xml" ] && grep -q 'https://maven.pkg.github.com/nabu-platform/maven' "$HOME/.m2/settings.xml"; then
+            echo 'GitHub Maven endpoint already configured in settings.xml'
+            exit 0
+          fi
+          cat > "$HOME/.m2/settings.xml" <<'EOF'
+          <settings>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>__MAVEN_BUILD_USER__</username>
+                <password>__MAVEN_BUILD_TOKEN__</password>
+              </server>
+            </servers>
+            <profiles>
+              <profile>
+                <id>github-packages</id>
+                <repositories>
+                  <repository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/nabu-platform/maven</url>
+                    <releases>
+                      <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                      <enabled>true</enabled>
+                    </snapshots>
+                  </repository>
+                </repositories>
+                <pluginRepositories>
+                  <pluginRepository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/nabu-platform/maven</url>
+                    <releases>
+                      <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                      <enabled>true</enabled>
+                    </snapshots>
+                  </pluginRepository>
+                </pluginRepositories>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>github-packages</activeProfile>
+            </activeProfiles>
+          </settings>
+          EOF
+          python3 -c "import os; from pathlib import Path; path = Path(os.path.expanduser('~/.m2/settings.xml')); text = path.read_text(); text = text.replace('__MAVEN_BUILD_USER__', os.environ['MAVEN_BUILD_USER']); text = text.replace('__MAVEN_BUILD_TOKEN__', os.environ['MAVEN_BUILD_TOKEN']); path.write_text(text)"
+        env:
+          MAVEN_BUILD_USER: ${{ secrets.MAVEN_BUILD_USER }}
+          MAVEN_BUILD_TOKEN: ${{ secrets.MAVEN_BUILD_TOKEN }}
+
+      - name: Set up Maven cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-
+
+      - name: Determine release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_version="${GITHUB_REF_NAME#v}"
+          if [ -z "$release_version" ]; then
+            echo 'Could not determine release version from tag'
+            exit 1
+          fi
+          echo "value=$release_version" >> "$GITHUB_OUTPUT"
+
+      - name: Set plugin version
+        run: mvn -s "$HOME/.m2/settings.xml" -B versions:set -DnewVersion=${{ steps.version.outputs.value }} -DgenerateBackupPoms=false
+
+      - name: Build plugin
+        run: mvn -s "$HOME/.m2/settings.xml" -B -Duser.timezone=UTC clean package
+
+      - name: Collect release asset
+        id: asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_id=$(sed -n 's:.*<artifactId>\(.*\)</artifactId>.*:\1:p' pom.xml | head -n 1)
+          version='${{ steps.version.outputs.value }}'
+          asset="target/${artifact_id}-${version}.jar"
+          if [ ! -f "$asset" ]; then
+            echo "Expected built artifact not found: $asset"
+            exit 1
+          fi
+          echo "path=$asset" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$asset")" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.asset.outputs.path }}
+          generate_release_notes: true
