@@ -90,6 +90,16 @@ jobs:
           restore-keys: |
             maven-${{ runner.os }}-
 
+      - name: Check out poms repository
+        uses: actions/checkout@v4
+        with:
+          repository: nabu-platform/poms
+          path: poms
+
+      - name: Install core parent from poms repository
+        working-directory: poms
+        run: mvn -s "$HOME/.m2/settings.xml" -B install:install-file -Dpackaging=pom -Dfile=core.xml -DpomFile=core.xml
+
       - name: Determine release version
         id: version
         shell: bash
