@@ -115,8 +115,22 @@ jobs:
       - name: Set plugin version
         run: mvn -s "$HOME/.m2/settings.xml" -B versions:set -DnewVersion=${{ steps.version.outputs.value }} -DgenerateBackupPoms=false
 
+      - name: Prepare signing keystore
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$SIGN_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/github-ci-signing.jks"
+        env:
+          SIGN_KEYSTORE_BASE64: ${{ secrets.SIGN_KEYSTORE_BASE64 }}
+
       - name: Build plugin
-        run: mvn -s "$HOME/.m2/settings.xml" -B -Duser.timezone=UTC clean package
+        run: >-
+          mvn -s "$HOME/.m2/settings.xml" -B -Duser.timezone=UTC clean package
+          -Dsign.keystore=$RUNNER_TEMP/github-ci-signing.jks
+          -Dsign.storetype=JKS
+          -Dsign.alias=${{ secrets.SIGN_KEY_ALIAS }}
+          -Dsign.storepass=${{ secrets.SIGN_KEYSTORE_PASSWORD }}
+          -Dsign.keypass=${{ secrets.SIGN_KEY_PASSWORD }}
 
       - name: Collect release asset
         id: asset
