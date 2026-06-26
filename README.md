@@ -202,6 +202,7 @@ Current built-in handlers include the full checked-out merge-script-based artifa
 ## Variable naming and list policy
 
 Variable keys should use the logical parameter names from the merge scripts and handlers.
+When you need to target a specific artifact, use the artifact-qualified form `<artifactId>:<field>`.
 Examples:
 
 - `jdbcUrl`
@@ -211,11 +212,42 @@ Examples:
 - `path`
 - `fragment.roles`
 - `fragment.endpoint`
+- `my.main.pool:jdbcUrl`
+- `my.main.pool:password`
+- `my.web.application:fragment.roles`
+
+Lookup order is:
+
+1. provider value for the exact key, for example `my.main.pool:jdbcUrl`
+2. fixed configuration file value for the exact key
+3. provider value for the plain fallback key, for example `jdbcUrl`
+4. fixed configuration file value for the plain fallback key
 
 Environment separation should come from the provider, for example GitLab `environment_scope`, not from prefixes.
 An optional prefix can still be used for namespacing, but it is not the primary separation mechanism.
 
 Lists are detected only from artifact definitions or from built-in handler knowledge, never from the raw value shape.
+
+## Optional fixed configuration file
+
+You can optionally pass a local properties file with `environment.configurationFile`.
+If no file is configured explicitly, the plugin automatically uses `${project.basedir}/.nabu-config` when that file exists.
+This file is intended for versioned non-secret defaults and placeholder-based secret references.
+
+Example:
+
+```properties
+my.main.pool:jdbcUrl=jdbc:postgresql://qlty-db:5432/app
+my.main.pool:username=app_user
+my.main.pool:password=${DB_PASSWORD}
+DB_PASSWORD=
+```
+
+Fixed configuration values are meta-processed for placeholders using provider values.
+This allows a fixed file to reference provider-managed secrets without storing the secret value itself.
+If a placeholder is not present in the provider values, it is left unchanged.
+
+The plugin checks the configured provider first and only falls back to the fixed configuration file when the provider does not contain the requested key.
 The canonical new format for list values is a JSON array in the base key:
 
 ```text

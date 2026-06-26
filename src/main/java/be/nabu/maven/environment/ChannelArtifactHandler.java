@@ -32,15 +32,27 @@ public class ChannelArtifactHandler extends AbstractXmlArtifactHandler {
 		}
 		Document document = parse(input);
 		XPath xpath = newXPath();
-		for (Map.Entry<String, String> entry : context.getValues()
+		for (Map.Entry<String, String> entry : context.getProviderValues()
 			.entrySet()) {
-			if (entry.getKey().contains(".") || entry.getKey().endsWith("]")) {
+			if (entry.getKey().contains(".") || entry.getKey().endsWith("]") || entry.getKey().contains(":")) {
 				continue;
 			}
 			replaceNodeValue(
 				context,
 				node(xpath, document, "/channel/properties/property[@key='" + entry.getKey() + "']/text()"),
 				entry.getValue(),
+				false
+			);
+		}
+		for (Map.Entry<String, String> entry : context.getFixedValues()
+			.entrySet()) {
+			if (entry.getKey().contains(".") || entry.getKey().endsWith("]") || entry.getKey().contains(":")) {
+				continue;
+			}
+			replaceNodeValue(
+				context,
+				node(xpath, document, "/channel/properties/property[@key='" + entry.getKey() + "']/text()"),
+				EnvironmentValues.scalar(context, entry.getKey()),
 				false
 			);
 		}

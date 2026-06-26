@@ -23,20 +23,35 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class EnvironmentValues {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+	private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
 
 	private EnvironmentValues() {}
 
 	public static String scalar(EnvironmentBuildContext context, String key) {
-		return context.getValues().get(key);
+		String qualifiedKey = qualifiedKey(context, key);
+		String providerValue = qualifiedKey == null ? null : context.getProviderValues().get(qualifiedKey);
+		if (providerValue == null) {
+			providerValue = context.getProviderValues().get(key);
+		}
+		if (providerValue != null) {
+			return providerValue;
+		}
+		String fixedValue = qualifiedKey == null ? null : context.getFixedValues().get(qualifiedKey);
+		if (fixedValue == null) {
+			fixedValue = context.getFixedValues().get(key);
+		}
+		return fixedValue == null ? null : resolvePlaceholders(context, fixedValue);
 	}
 
 	public static List<String> list(EnvironmentBuildContext context, String key, boolean allowCommaSeparatedFallback) throws ArtifactHandlerException {
-		String value = context.getValues().get(key);
+		String value = scalar(context, key);
 		if (value != null) {
 			String trimmed = value.trim();
 			if (trimmed.startsWith("[")) {
@@ -48,7 +63,7 @@ public final class EnvironmentValues {
 				}
 			}
 		}
-		Map<Integer, String> indexed = indexedValues(context.getValues(), key);
+		Map<Integer, String> indexed = indexedValues(context, key);
 		if (!indexed.isEmpty()) {
 			List<Map.Entry<Integer, String>> entries = new ArrayList<Map.Entry<Integer, String>>(indexed.entrySet());
 			Collections.sort(
@@ -72,7 +87,30 @@ public final class EnvironmentValues {
 		return null;
 	}
 
-	public static Map<Integer, String> indexedValues(Map<String, String> values, String key) {
+	public static Map<Integer, String> indexedValues(EnvironmentBuildContext context, String key) {
+		String qualifiedKey = qualifiedKey(context, key);
+		Map<Integer, String> result = qualifiedKey == null ? new LinkedHashMap<Integer, String>() : indexedValues(context.getProviderValues(), qualifiedKey);
+		if (result.isEmpty()) {
+			result = indexedValues(context.getProviderValues(), key);
+		}
+		if (!result.isEmpty()) {
+			return result;
+		}
+		Map<Integer, String> fixedValues = qualifiedKey == null ? new LinkedHashMap<Integer, String>() : indexedValues(context.getFixedValues(), qualifiedKey);
+		if (fixedValues.isEmpty()) {
+			fixedValues = indexedValues(context.getFixedValues(), key);
+		}
+		if (fixedValues.isEmpty()) {
+			return fixedValues;
+		}
+		Map<Integer, String> resolved = new LinkedHashMap<Integer, String>();
+		for (Map.Entry<Integer, String> entry : fixedValues.entrySet()) {
+			resolved.put(entry.getKey(), resolvePlaceholders(context, entry.getValue()));
+		}
+		return resolved;
+	}
+
+	private static Map<Integer, String> indexedValues(Map<String, String> values, String key) {
 		Map<Integer, String> result = new LinkedHashMap<Integer, String>();
 		String prefix = key + "[";
 		for (Map.Entry<String, String> entry : values.entrySet()) {
@@ -88,6 +126,28 @@ public final class EnvironmentValues {
 			}
 		}
 		return result;
+	}
+
+	private static String qualifiedKey(EnvironmentBuildContext context, String key) {
+		if (!(context instanceof ArtifactScopedEnvironmentBuildContext)) {
+			return null;
+		}
+		String artifactId = ((ArtifactScopedEnvironmentBuildContext) context).getArtifactId();
+		if (artifactId == null || artifactId.trim().isEmpty()) {
+			return null;
+		}
+		return artifactId + ":" + key;
+	}
+
+	private static String resolvePlaceholders(EnvironmentBuildContext context, String value) {
+		Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
+		StringBuffer buffer = new StringBuffer();
+		while (matcher.find()) {
+			String replacement = context.getProviderValues().get(matcher.group(1));
+			matcher.appendReplacement(buffer, Matcher.quoteReplacement(replacement == null ? matcher.group(0) : replacement));
+		}
+		matcher.appendTail(buffer);
+		return buffer.toString();
 	}
 
 	private static List<String> splitCommaSeparated(String value) {

@@ -26,7 +26,8 @@ public class EnvironmentBuildContext {
 	private final File projectDirectory;
 	private final File outputDirectory;
 	private final String environmentName;
-	private final Map<String, String> values;
+	private final Map<String, String> providerValues;
+	private final Map<String, String> fixedValues;
 	private final SecretCodec secretCodec;
 	private final Map<String, String> options;
 	private final Log log;
@@ -35,14 +36,16 @@ public class EnvironmentBuildContext {
 			File projectDirectory,
 			File outputDirectory,
 			String environmentName,
-			Map<String, String> values,
+			Map<String, String> providerValues,
+			Map<String, String> fixedValues,
 			SecretCodec secretCodec,
 			Map<String, String> options,
 			Log log) {
 		this.projectDirectory = projectDirectory;
 		this.outputDirectory = outputDirectory;
 		this.environmentName = environmentName;
-		this.values = values;
+		this.providerValues = providerValues == null ? Collections.<String, String>emptyMap() : providerValues;
+		this.fixedValues = fixedValues == null ? Collections.<String, String>emptyMap() : fixedValues;
 		this.secretCodec = secretCodec;
 		this.options = options == null ? Collections.<String, String>emptyMap() : options;
 		this.log = log;
@@ -60,8 +63,12 @@ public class EnvironmentBuildContext {
 		return environmentName;
 	}
 
-	public Map<String, String> getValues() {
-		return values;
+	public Map<String, String> getProviderValues() {
+		return providerValues;
+	}
+
+	public Map<String, String> getFixedValues() {
+		return fixedValues;
 	}
 
 	public SecretCodec getSecretCodec() {

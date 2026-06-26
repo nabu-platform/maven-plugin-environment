@@ -65,13 +65,24 @@ public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
 		XPath xpath = newXPath();
 		Map<String, DefinitionModel> definitions = loadFragmentDefinitions(context);
 		Map<String, String> fragmentScalars = new LinkedHashMap<String, String>();
-		for (Map.Entry<String, String> entry : context.getValues()
+		for (Map.Entry<String, String> entry : context.getProviderValues()
 			.entrySet()) {
 			if (!entry.getKey().startsWith("fragment.")) {
 				continue;
 			}
 			String property = entry.getKey().substring("fragment.".length());
 			if (property.endsWith("]")) {
+				continue;
+			}
+			fragmentScalars.put(property, entry.getValue());
+		}
+		for (Map.Entry<String, String> entry : context.getFixedValues()
+			.entrySet()) {
+			if (!entry.getKey().startsWith("fragment.")) {
+				continue;
+			}
+			String property = entry.getKey().substring("fragment.".length());
+			if (property.endsWith("]") || fragmentScalars.containsKey(property)) {
 				continue;
 			}
 			fragmentScalars.put(property, entry.getValue());

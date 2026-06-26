@@ -22,15 +22,28 @@ import java.io.File;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 
 public final class XmlUtils {
 	private XmlUtils() {}
+
+	public static String readRootText(File input, String expression) throws Exception {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(false);
+		factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+		Document document = factory.newDocumentBuilder().parse(input);
+		return (String) XPathFactory.newInstance().newXPath().evaluate(expression, document, XPathConstants.STRING);
+	}
 
 	public static void write(Document document, File output) throws Exception {
 		write(document, output, true);

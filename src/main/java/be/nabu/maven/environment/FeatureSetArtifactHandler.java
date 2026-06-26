@@ -38,24 +38,34 @@ public class FeatureSetArtifactHandler extends AbstractXmlArtifactHandler {
 		XPath xpath = newXPath();
 		List<String> enabled = values(xpath, document, "/featureSet/features/text()");
 		List<String> disabled = values(xpath, document, "/featureSet/disabled/text()");
-		for (Map.Entry<String, String> entry : context.getValues()
+		for (Map.Entry<String, String> entry : context.getProviderValues()
 			.entrySet()) {
-			String setting = entry.getValue();
-			if (!"true".equalsIgnoreCase(setting) && !"false".equalsIgnoreCase(setting)) {
+			applySetting(enabled, disabled, entry.getKey(), entry.getValue());
+		}
+		for (Map.Entry<String, String> entry : context.getFixedValues()
+			.entrySet()) {
+			if (context.getProviderValues().containsKey(entry.getKey())) {
 				continue;
 			}
-			enabled.remove(entry.getKey());
-			disabled.remove(entry.getKey());
-			if (Boolean.parseBoolean(setting)) {
-				enabled.add(entry.getKey());
-			}
-			else {
-				disabled.add(entry.getKey());
-			}
+			applySetting(enabled, disabled, entry.getKey(), EnvironmentValues.scalar(context, entry.getKey()));
 		}
 		rewriteList(document, enabled, "/featureSet/features", "features");
 		rewriteList(document, disabled, "/featureSet/disabled", "disabled");
 		write(document, new File(context.getOutputDirectory(), "feature-set.xml"));
+	}
+
+	private void applySetting(List<String> enabled, List<String> disabled, String key, String setting) {
+		if (key.contains(":") || !"true".equalsIgnoreCase(setting) && !"false".equalsIgnoreCase(setting)) {
+			return;
+		}
+		enabled.remove(key);
+		disabled.remove(key);
+		if (Boolean.parseBoolean(setting)) {
+			enabled.add(key);
+		}
+		else {
+			disabled.add(key);
+		}
 	}
 
 	private List<String> values(XPath xpath, Document document, String expression) throws ArtifactHandlerException {

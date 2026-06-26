@@ -18,9 +18,11 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -54,6 +56,9 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 	@Parameter
 	private Map<String, String> options;
 
+	@Parameter(property = "environment.configurationFile")
+	private File configurationFile;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (environmentName == null || environmentName.trim().isEmpty()) {
@@ -62,20 +67,23 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 		if (!outputDirectory.exists() && !outputDirectory.mkdirs()) {
 			throw new MojoExecutionException("Could not create output directory: " + outputDirectory);
 		}
-		Map<String, String> values = new LinkedHashMap<String, String>();
+		Map<String, String> providerValues = new LinkedHashMap<String, String>();
 		EnvironmentValueProvider valueProvider = createProvider();
 		if (valueProvider != null) {
-			values.putAll(valueProvider.loadValues(environmentName));
+			providerValues.putAll(valueProvider.loadValues(environmentName));
 		}
+		Map<String, String> fixedValues = loadFixedValues();
 		List<ArtifactHandler> artifactHandlers = ArtifactHandlers.resolveHandlers(handlers);
-		EnvironmentBuildContext context = new EnvironmentBuildContext(
+		EnvironmentBuildContext context = new ArtifactScopedEnvironmentBuildContext(
 			projectDirectory,
 			outputDirectory,
 			environmentName,
-			values,
+			providerValues,
+			fixedValues,
 			new SecretCodec(secret),
 			options,
-			getLog()
+			getLog(),
+			ArtifactIdResolver.resolve(projectDirectory)
 		);
 		for (ArtifactHandler handler : artifactHandlers) {
 			try {
@@ -85,6 +93,33 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 				throw new MojoExecutionException("Artifact handler failed: " + handler.getClass().getSimpleName(), e);
 			}
 		}
+	}
+
+	private Map<String, String> loadFixedValues() throws MojoExecutionException {
+		Map<String, String> values = new LinkedHashMap<String, String>();
+		File effectiveConfigurationFile = configurationFile;
+		if (effectiveConfigurationFile == null) {
+			File defaultConfigurationFile = new File(projectDirectory, ".nabu-config");
+			if (!defaultConfigurationFile.exists()) {
+				return values;
+			}
+			effectiveConfigurationFile = defaultConfigurationFile;
+		}
+		if (!effectiveConfigurationFile.exists()) {
+			throw new MojoExecutionException("Configured environment.configurationFile does not exist: " + effectiveConfigurationFile);
+		}
+		Properties properties = new Properties();
+		try (FileInputStream input = new FileInputStream(effectiveConfigurationFile)) {
+			getLog().info("Loading fixed environment configuration from " + effectiveConfigurationFile);
+			properties.load(input);
+		}
+		catch (Exception e) {
+			throw new MojoExecutionException("Could not read environment.configurationFile: " + effectiveConfigurationFile, e);
+		}
+		for (String key : properties.stringPropertyNames()) {
+			values.put(key, properties.getProperty(key));
+		}
+		return values;
 	}
 
 	private EnvironmentValueProvider createProvider() throws MojoExecutionException {

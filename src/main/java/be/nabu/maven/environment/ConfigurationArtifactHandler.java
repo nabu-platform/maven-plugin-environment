@@ -38,10 +38,18 @@ public class ConfigurationArtifactHandler extends AbstractXmlArtifactHandler {
 		DefinitionModel definitionModel = DefinitionParser.parse(definition);
 		XPath xpath = newXPath();
 		Map<String, String> scalarValues = new LinkedHashMap<String, String>();
-		for (Map.Entry<String, String> entry : context.getValues()
+		for (Map.Entry<String, String> entry : context.getProviderValues()
 			.entrySet()) {
 			String key = entry.getKey();
-			if (key.contains(".") || key.endsWith("]")) {
+			if (key.contains(".") || key.endsWith("]") || key.contains(":")) {
+				continue;
+			}
+			scalarValues.put(key, entry.getValue());
+		}
+		for (Map.Entry<String, String> entry : context.getFixedValues()
+			.entrySet()) {
+			String key = entry.getKey();
+			if (key.contains(".") || key.endsWith("]") || key.contains(":") || scalarValues.containsKey(key)) {
 				continue;
 			}
 			scalarValues.put(key, entry.getValue());
