@@ -85,6 +85,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			getLog(),
 			ArtifactIdResolver.resolve(projectDirectory)
 		);
+		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifactHandlers);
 		for (ArtifactHandler handler : artifactHandlers) {
 			try {
 				handler.apply(context);
@@ -92,6 +93,12 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			catch (ArtifactHandlerException e) {
 				throw new MojoExecutionException("Artifact handler failed: " + handler.getClass().getSimpleName(), e);
 			}
+		}
+		try {
+			XmlOverrideProcessor.apply(context, aliases);
+		}
+		catch (ArtifactHandlerException e) {
+			throw new MojoExecutionException("Could not apply xml overrides", e);
 		}
 	}
 
