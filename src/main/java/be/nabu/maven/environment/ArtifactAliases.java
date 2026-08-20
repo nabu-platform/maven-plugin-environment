@@ -118,6 +118,9 @@ public final class ArtifactAliases {
 	}
 
 	private static boolean exists(EnvironmentBuildContext context, String fileName) {
-		return new java.io.File(context.getProjectDirectory(), fileName).exists();
+		java.io.File baseDirectory = context instanceof ArtifactScopedEnvironmentBuildContext
+			? ((ArtifactScopedEnvironmentBuildContext) context).getArtifactDirectory()
+			: context.getProjectDirectory();
+		return new java.io.File(baseDirectory, fileName).exists();
 	}
 }

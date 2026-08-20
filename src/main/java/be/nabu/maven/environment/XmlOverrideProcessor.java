@@ -79,7 +79,7 @@ public final class XmlOverrideProcessor {
 			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
 			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-			return factory.newDocumentBuilder().parse(new java.io.File(context.getOutputDirectory(), fileName));
+			return factory.newDocumentBuilder().parse(resolveFile(context, fileName));
 		}
 		catch (Exception e) {
 			throw new ArtifactHandlerException("Could not parse xml file for overrides: " + fileName, e);
@@ -88,7 +88,7 @@ public final class XmlOverrideProcessor {
 
 	private static void write(EnvironmentBuildContext context, Document document, String fileName) throws ArtifactHandlerException {
 		try {
-			XmlUtils.write(document, new java.io.File(context.getOutputDirectory(), fileName));
+			XmlUtils.write(document, resolveFile(context, fileName));
 		}
 		catch (Exception e) {
 			throw new ArtifactHandlerException("Could not write xml file after overrides: " + fileName, e);
@@ -217,6 +217,13 @@ public final class XmlOverrideProcessor {
 				}
 			}
 		}
+	}
+
+	private static java.io.File resolveFile(EnvironmentBuildContext context, String fileName) {
+		java.io.File baseDirectory = context instanceof ArtifactScopedEnvironmentBuildContext
+			? ((ArtifactScopedEnvironmentBuildContext) context).getArtifactDirectory()
+			: context.getOutputDirectory();
+		return new java.io.File(baseDirectory, fileName);
 	}
 
 	private static Node node(XPath xpath, Document document, String expression) throws ArtifactHandlerException {

@@ -23,10 +23,11 @@ public final class ArtifactIdResolver {
 	private ArtifactIdResolver() {}
 
 	public static String resolve(File projectDirectory) {
-		if (projectDirectory == null) {
+		File artifactDirectory = resolveArtifactDirectory(projectDirectory);
+		if (artifactDirectory == null) {
 			return null;
 		}
-		File meta = new File(projectDirectory, "artifact.xml");
+		File meta = new File(artifactDirectory, "artifact.xml");
 		if (meta.exists()) {
 			try {
 				return XmlUtils.readRootText(meta, "/artifact/id/text()");
@@ -35,6 +36,35 @@ public final class ArtifactIdResolver {
 				throw new IllegalStateException("Could not resolve artifact id from: " + meta, e);
 			}
 		}
-		return projectDirectory.getName();
+		return artifactDirectory.getName();
+	}
+
+	public static File resolveArtifactDirectory(File projectDirectory) {
+		if (projectDirectory == null) {
+			return null;
+		}
+		File current = projectDirectory;
+		while (current != null) {
+			if (new File(current, "artifact.xml").exists()) {
+				return current;
+			}
+			if (new File(current, "node.xml").exists()) {
+				return current;
+			}
+			if (new File(current, "jdbcPool.xml").exists()) {
+				return current;
+			}
+			if (new File(current, "httpServer.xml").exists()) {
+				return current;
+			}
+			if (new File(current, "virtual-host.xml").exists()) {
+				return current;
+			}
+			if (new File(current, "swagger-client.xml").exists()) {
+				return current;
+			}
+			current = current.getParentFile();
+		}
+		return projectDirectory;
 	}
 }

@@ -74,6 +74,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 		}
 		Map<String, String> fixedValues = loadFixedValues();
 		List<ArtifactHandler> artifactHandlers = ArtifactHandlers.resolveHandlers(handlers);
+		File artifactDirectory = ArtifactIdResolver.resolveArtifactDirectory(projectDirectory);
 		EnvironmentBuildContext context = new ArtifactScopedEnvironmentBuildContext(
 			projectDirectory,
 			outputDirectory,
@@ -83,7 +84,8 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			new SecretCodec(secret),
 			options,
 			getLog(),
-			ArtifactIdResolver.resolve(projectDirectory)
+			ArtifactIdResolver.resolve(artifactDirectory),
+			artifactDirectory
 		);
 		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifactHandlers, context);
 		for (ArtifactHandler handler : artifactHandlers) {

@@ -23,8 +23,9 @@ import org.apache.maven.plugin.logging.Log;
 
 public class ArtifactScopedEnvironmentBuildContext extends EnvironmentBuildContext {
 	private final String artifactId;
+	private final File artifactDirectory;
 
-	public ArtifactScopedEnvironmentBuildContext(EnvironmentBuildContext parent, String artifactId) {
+	public ArtifactScopedEnvironmentBuildContext(EnvironmentBuildContext parent, String artifactId, File artifactDirectory) {
 		super(
 			parent.getProjectDirectory(),
 			parent.getOutputDirectory(),
@@ -36,6 +37,7 @@ public class ArtifactScopedEnvironmentBuildContext extends EnvironmentBuildConte
 			parent.getLog()
 		);
 		this.artifactId = artifactId;
+		this.artifactDirectory = artifactDirectory;
 	}
 
 	public ArtifactScopedEnvironmentBuildContext(
@@ -47,12 +49,18 @@ public class ArtifactScopedEnvironmentBuildContext extends EnvironmentBuildConte
 			SecretCodec secretCodec,
 			Map<String, String> options,
 			Log log,
-			String artifactId) {
+			String artifactId,
+			File artifactDirectory) {
 		super(projectDirectory, outputDirectory, environmentName, providerValues, fixedValues, secretCodec, options, log);
 		this.artifactId = artifactId;
+		this.artifactDirectory = artifactDirectory;
 	}
 
 	public String getArtifactId() {
 		return artifactId;
+	}
+
+	public File getArtifactDirectory() {
+		return artifactDirectory;
 	}
 }
