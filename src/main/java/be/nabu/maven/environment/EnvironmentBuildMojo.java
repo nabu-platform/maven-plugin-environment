@@ -85,7 +85,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			getLog(),
 			ArtifactIdResolver.resolve(projectDirectory)
 		);
-		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifactHandlers);
+		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifactHandlers, context);
 		for (ArtifactHandler handler : artifactHandlers) {
 			try {
 				handler.apply(context);

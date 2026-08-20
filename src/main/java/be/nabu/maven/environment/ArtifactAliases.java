@@ -24,19 +24,19 @@ import java.util.Map;
 public final class ArtifactAliases {
 	private ArtifactAliases() {}
 
-	public static Map<String, AliasTarget> resolveAliases(List<ArtifactHandler> handlers) {
+	public static Map<String, AliasTarget> resolveAliases(List<ArtifactHandler> handlers, EnvironmentBuildContext context) {
 		Map<String, AliasTarget> aliases = new LinkedHashMap<String, AliasTarget>();
 		for (ArtifactHandler handler : handlers) {
-			if (handler instanceof JdbcPoolArtifactHandler) {
+			if (handler instanceof JdbcPoolArtifactHandler && exists(context, "jdbcPool.xml")) {
 				jdbcPool(aliases);
 			}
-			else if (handler instanceof HttpServerArtifactHandler) {
+			else if (handler instanceof HttpServerArtifactHandler && exists(context, "httpServer.xml")) {
 				httpServer(aliases);
 			}
-			else if (handler instanceof VirtualHostArtifactHandler) {
+			else if (handler instanceof VirtualHostArtifactHandler && exists(context, "virtual-host.xml")) {
 				virtualHost(aliases);
 			}
-			else if (handler instanceof SwaggerClientArtifactHandler) {
+			else if (handler instanceof SwaggerClientArtifactHandler && exists(context, "swagger-client.xml")) {
 				swaggerClient(aliases);
 			}
 		}
@@ -114,8 +114,10 @@ public final class ArtifactAliases {
 	}
 
 	private static void alias(Map<String, AliasTarget> aliases, String alias, String fileName, String query, boolean encrypted) {
-		if (!aliases.containsKey(alias)) {
-			aliases.put(alias, new AliasTarget(fileName, query, encrypted));
-		}
+		aliases.put(alias, new AliasTarget(fileName, query, encrypted));
+	}
+
+	private static boolean exists(EnvironmentBuildContext context, String fileName) {
+		return new java.io.File(context.getProjectDirectory(), fileName).exists();
 	}
 }
