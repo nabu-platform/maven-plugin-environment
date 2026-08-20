@@ -24,12 +24,16 @@ import java.util.Map;
 public final class EnvironmentOverrideParser {
 	private EnvironmentOverrideParser() {}
 
-	public static List<EnvironmentOverride> parse(Map<String, String> values, Map<String, AliasTarget> aliases) {
+	public static List<EnvironmentOverride> parse(Map<String, String> values, Map<String, AliasTarget> aliases, org.apache.maven.plugin.logging.Log log, String source) {
 		List<EnvironmentOverride> overrides = new ArrayList<EnvironmentOverride>();
 		for (Map.Entry<String, String> entry : values.entrySet()) {
 			EnvironmentOverride override = parse(entry.getKey(), entry.getValue(), aliases);
 			if (override != null) {
+				log.info("Parsed " + source + " override: " + entry.getKey() + " -> " + override.getFileName() + ":" + override.getQuery());
 				overrides.add(override);
+			}
+			else if (entry.getKey().contains(":")) {
+				log.warn("Could not parse " + source + " override key: " + entry.getKey());
 			}
 		}
 		return overrides;

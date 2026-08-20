@@ -46,10 +46,12 @@ public final class XmlOverrideProcessor {
 	private static Map<String, List<EnvironmentOverride>> groupByFile(EnvironmentBuildContext context, Map<String, AliasTarget> aliases) {
 		Map<String, List<EnvironmentOverride>> grouped = new LinkedHashMap<String, List<EnvironmentOverride>>();
 		List<EnvironmentOverride> overrides = new ArrayList<EnvironmentOverride>();
-		overrides.addAll(EnvironmentOverrideParser.parse(context.getFixedValues(), aliases));
-		overrides.addAll(EnvironmentOverrideParser.parse(context.getProviderValues(), aliases));
+		overrides.addAll(EnvironmentOverrideParser.parse(context.getFixedValues(), aliases, context.getLog(), "fixed"));
+		overrides.addAll(EnvironmentOverrideParser.parse(context.getProviderValues(), aliases, context.getLog(), "provider"));
+		String scopedArtifactId = ((ArtifactScopedEnvironmentBuildContext) context).getArtifactId();
 		for (EnvironmentOverride override : overrides) {
-			if (!override.getArtifactId().equals(((ArtifactScopedEnvironmentBuildContext) context).getArtifactId())) {
+			if (!override.getArtifactId().equals(scopedArtifactId)) {
+				context.getLog().warn("Skipping override for artifact '" + override.getArtifactId() + "' while current artifact scope is '" + scopedArtifactId + "': " + override.getArtifactId() + ":" + override.getFileName() + ":" + override.getQuery());
 				continue;
 			}
 			List<EnvironmentOverride> fileOverrides = grouped.get(override.getFileName());
@@ -57,6 +59,7 @@ public final class XmlOverrideProcessor {
 				fileOverrides = new ArrayList<EnvironmentOverride>();
 				grouped.put(override.getFileName(), fileOverrides);
 			}
+			context.getLog().info("Queued override for artifact '" + override.getArtifactId() + "' file '" + override.getFileName() + "' query '" + override.getQuery() + "'");
 			fileOverrides.add(override);
 		}
 		return grouped;
@@ -74,12 +77,14 @@ public final class XmlOverrideProcessor {
 
 	private static Document parse(EnvironmentBuildContext context, String fileName) throws ArtifactHandlerException {
 		try {
+			java.io.File resolvedFile = resolveFile(context, fileName);
+			context.getLog().info("Parsing xml override target: " + resolvedFile.getAbsolutePath());
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setNamespaceAware(false);
 			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
 			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-			return factory.newDocumentBuilder().parse(resolveFile(context, fileName));
+			return factory.newDocumentBuilder().parse(resolvedFile);
 		}
 		catch (Exception e) {
 			throw new ArtifactHandlerException("Could not parse xml file for overrides: " + fileName, e);
@@ -104,9 +109,10 @@ public final class XmlOverrideProcessor {
 		}
 		NodeList nodes = nodes(xpath, document, query);
 		if (nodes.getLength() == 0) {
-			context.getLog().warn("No xml nodes matched override query: " + query + " in " + override.getFileName());
+			context.getLog().warn("No xml nodes matched override query: " + query + " in " + override.getFileName() + " for artifact '" + override.getArtifactId() + "'");
 			return;
 		}
+		context.getLog().info("Applying override to " + nodes.getLength() + " node(s) for artifact '" + override.getArtifactId() + "' file '" + override.getFileName() + "' query '" + query + "'");
 		for (int i = 0; i < nodes.getLength(); i++) {
 			applyValue(document, nodes.item(i), value);
 		}
