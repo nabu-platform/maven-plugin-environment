@@ -61,6 +61,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project}", readonly = true, required = true)
 	private MavenProject project;
 
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (environmentName == null || environmentName.trim().isEmpty()) {
@@ -76,6 +77,9 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 		}
 		Map<String, String> fixedValues = loadFixedValues();
 		List<ArtifactHandler> artifactHandlers = ArtifactHandlers.resolveHandlers(handlers);
+		String effectiveRootArtifactId = project.getArtifactId();
+		getLog().info("Using Maven project artifact id as root artifact id: " + effectiveRootArtifactId);
+		getLog().info("Maven project basedir: " + project.getBasedir());
 		EnvironmentBuildContext context = new EnvironmentBuildContext(
 			projectDirectory,
 			outputDirectory,
@@ -85,7 +89,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			new SecretCodec(secret),
 			options,
 			getLog(),
-			project.getArtifactId()
+			effectiveRootArtifactId
 		);
 		for (ArtifactHandler handler : artifactHandlers) {
 			try {
