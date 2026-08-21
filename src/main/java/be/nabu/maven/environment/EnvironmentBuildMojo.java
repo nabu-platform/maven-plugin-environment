@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -61,6 +62,9 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project}", readonly = true, required = true)
 	private MavenProject project;
 
+	@Parameter(defaultValue = "${session}", readonly = true, required = true)
+	private MavenSession session;
+
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -70,18 +74,22 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 		if (!outputDirectory.exists() && !outputDirectory.mkdirs()) {
 			throw new MojoExecutionException("Could not create output directory: " + outputDirectory);
 		}
+		MavenProject effectiveProject = resolveEffectiveProject();
+		File effectiveProjectDirectory = effectiveProject.getBasedir();
+		String effectiveRootArtifactId = effectiveProject.getArtifactId();
+		getLog().info("Injected Maven project artifact id: " + project.getArtifactId());
+		getLog().info("Injected Maven project basedir: " + project.getBasedir());
+		getLog().info("Effective Maven project artifact id: " + effectiveRootArtifactId);
+		getLog().info("Effective Maven project basedir: " + effectiveProjectDirectory);
 		Map<String, String> providerValues = new LinkedHashMap<String, String>();
 		EnvironmentValueProvider valueProvider = createProvider();
 		if (valueProvider != null) {
 			providerValues.putAll(valueProvider.loadValues(environmentName));
 		}
-		Map<String, String> fixedValues = loadFixedValues();
+		Map<String, String> fixedValues = loadFixedValues(effectiveProjectDirectory);
 		List<ArtifactHandler> artifactHandlers = ArtifactHandlers.resolveHandlers(handlers);
-		String effectiveRootArtifactId = project.getArtifactId();
-		getLog().info("Using Maven project artifact id as root artifact id: " + effectiveRootArtifactId);
-		getLog().info("Maven project basedir: " + project.getBasedir());
 		EnvironmentBuildContext context = new EnvironmentBuildContext(
-			projectDirectory,
+			effectiveProjectDirectory,
 			outputDirectory,
 			environmentName,
 			providerValues,
@@ -107,11 +115,11 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 		}
 	}
 
-	private Map<String, String> loadFixedValues() throws MojoExecutionException {
+	private Map<String, String> loadFixedValues(File effectiveProjectDirectory) throws MojoExecutionException {
 		Map<String, String> values = new LinkedHashMap<String, String>();
 		File effectiveConfigurationFile = configurationFile;
 		if (effectiveConfigurationFile == null) {
-			File defaultConfigurationFile = new File(projectDirectory, ".nabu-config");
+			File defaultConfigurationFile = new File(effectiveProjectDirectory, ".nabu-config");
 			if (!defaultConfigurationFile.exists()) {
 				return values;
 			}
@@ -128,6 +136,13 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			throw new MojoExecutionException("Could not read environment.configurationFile: " + effectiveConfigurationFile, e);
 		}
 		return values;
+	}
+
+	private MavenProject resolveEffectiveProject() {
+		if (session != null && session.getCurrentProject() != null) {
+			return session.getCurrentProject();
+		}
+		return project;
 	}
 
 	private EnvironmentValueProvider createProvider() throws MojoExecutionException {
