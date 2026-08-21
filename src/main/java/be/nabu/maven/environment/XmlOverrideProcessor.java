@@ -17,6 +17,7 @@
 
 package be.nabu.maven.environment;
 
+import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -38,74 +39,103 @@ public final class XmlOverrideProcessor {
 
 	public static void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(context.getProjectDirectory());
+		Map<String, ArtifactDescriptor> artifactsById = new LinkedHashMap<String, ArtifactDescriptor>();
 		context.getLog().info("Discovered " + artifacts.size() + " artifact(s) under project root " + context.getProjectDirectory().getAbsolutePath());
 		for (ArtifactDescriptor artifact : artifacts) {
+			artifactsById.put(artifact.getArtifactId(), artifact);
 			context.getLog().info("Artifact descriptor: id='" + artifact.getArtifactId() + "' type='" + artifact.getArtifactType() + "' dir='" + artifact.getArtifactDirectory().getAbsolutePath() + "'");
-			ArtifactScopedEnvironmentBuildContext scopedContext = new ArtifactScopedEnvironmentBuildContext(context, artifact.getArtifactId(), artifact.getArtifactDirectory());
-			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
-			context.getLog().info("Alias keys for artifact '" + artifact.getArtifactId() + "': " + aliases.keySet());
-			Map<String, List<EnvironmentOverride>> overridesByFile = groupByFile(scopedContext, aliases);
-			for (Map.Entry<String, List<EnvironmentOverride>> entry : overridesByFile.entrySet()) {
-				applyFile(scopedContext, entry.getKey(), entry.getValue(), aliases);
-			}
 		}
-	}
 
-	private static Map<String, List<EnvironmentOverride>> groupByFile(EnvironmentBuildContext context, Map<String, AliasTarget> aliases) {
-		Map<String, List<EnvironmentOverride>> grouped = new LinkedHashMap<String, List<EnvironmentOverride>>();
+		Map<File, Document> documentsByFile = new LinkedHashMap<File, Document>();
+		Map<File, List<AliasTarget>> encryptedTargetsByFile = new LinkedHashMap<File, List<AliasTarget>>();
 		List<EnvironmentOverride> overrides = new ArrayList<EnvironmentOverride>();
-		overrides.addAll(EnvironmentOverrideParser.parse(context.getFixedValues(), aliases, context.getLog(), "fixed"));
-		overrides.addAll(EnvironmentOverrideParser.parse(context.getProviderValues(), aliases, context.getLog(), "provider"));
-		String scopedArtifactId = ((ArtifactScopedEnvironmentBuildContext) context).getArtifactId();
-		for (EnvironmentOverride override : overrides) {
-			if (!override.getArtifactId().equals(scopedArtifactId)) {
-				context.getLog().warn("Skipping override for artifact '" + override.getArtifactId() + "' while current artifact scope is '" + scopedArtifactId + "': " + override.getArtifactId() + ":" + override.getFileName() + ":" + override.getQuery());
-				continue;
-			}
-			context.getLog().info("Matched override artifact id '" + override.getArtifactId() + "' to current artifact scope '" + scopedArtifactId + "'");
-			List<EnvironmentOverride> fileOverrides = grouped.get(override.getFileName());
-			if (fileOverrides == null) {
-				fileOverrides = new ArrayList<EnvironmentOverride>();
-				grouped.put(override.getFileName(), fileOverrides);
-			}
-			context.getLog().info("Queued override for artifact '" + override.getArtifactId() + "' file '" + override.getFileName() + "' query '" + override.getQuery() + "'");
-			fileOverrides.add(override);
-		}
-		return grouped;
-	}
+		overrides.addAll(parseOverrides(context, artifactsById, context.getFixedValues(), "fixed"));
+		overrides.addAll(parseOverrides(context, artifactsById, context.getProviderValues(), "provider"));
 
-	private static void applyFile(EnvironmentBuildContext context, String fileName, List<EnvironmentOverride> overrides, Map<String, AliasTarget> aliases) throws ArtifactHandlerException {
-		Document document = parse(context, fileName);
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		for (EnvironmentOverride override : overrides) {
+			ArtifactDescriptor artifact = artifactsById.get(override.getArtifactId());
+			if (artifact == null) {
+				context.getLog().warn("No artifact descriptor found for override artifact id '" + override.getArtifactId() + "'");
+				continue;
+			}
+			File targetFile = new File(artifact.getArtifactDirectory(), override.getFileName());
+			context.getLog().info("Resolved override target file for artifact '" + override.getArtifactId() + "': " + targetFile.getAbsolutePath() + " (exists=" + targetFile.exists() + ")");
+			Document document = documentsByFile.get(targetFile);
+			if (document == null) {
+				document = parse(targetFile);
+				documentsByFile.put(targetFile, document);
+			}
 			applyOverride(context, document, xpath, override);
+			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
+			for (AliasTarget aliasTarget : aliases.values()) {
+				if (aliasTarget.isEncrypted() && override.getFileName().equals(aliasTarget.getFileName())) {
+					List<AliasTarget> encryptedTargets = encryptedTargetsByFile.get(targetFile);
+					if (encryptedTargets == null) {
+						encryptedTargets = new ArrayList<AliasTarget>();
+						encryptedTargetsByFile.put(targetFile, encryptedTargets);
+					}
+					encryptedTargets.add(aliasTarget);
+				}
+			}
 		}
-		encryptKnownSecrets(context, document, xpath, fileName, aliases);
-		write(context, document, fileName);
+
+		for (Map.Entry<File, Document> entry : documentsByFile.entrySet()) {
+			List<AliasTarget> encryptedTargets = encryptedTargetsByFile.get(entry.getKey());
+			if (encryptedTargets != null) {
+				encryptKnownSecrets(context, entry.getValue(), xpath, encryptedTargets);
+			}
+			write(entry.getKey(), entry.getValue());
+		}
 	}
 
-	private static Document parse(EnvironmentBuildContext context, String fileName) throws ArtifactHandlerException {
+	private static List<EnvironmentOverride> parseOverrides(EnvironmentBuildContext context, Map<String, ArtifactDescriptor> artifactsById, Map<String, String> values, String source) {
+		List<EnvironmentOverride> overrides = new ArrayList<EnvironmentOverride>();
+		for (Map.Entry<String, String> entry : values.entrySet()) {
+			String key = entry.getKey();
+			int firstColon = key.indexOf(':');
+			if (firstColon <= 0 || firstColon == key.length() - 1) {
+				continue;
+			}
+			String artifactId = key.substring(0, firstColon).trim();
+			ArtifactDescriptor artifact = artifactsById.get(artifactId);
+			if (artifact == null) {
+				context.getLog().warn("Could not find artifact for " + source + " override key: " + key);
+				continue;
+			}
+			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
+			context.getLog().info("Alias keys for artifact '" + artifactId + "': " + aliases.keySet());
+			EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(key + "=" + entry.getValue(), aliases);
+			if (override == null) {
+				context.getLog().warn("Could not parse " + source + " override key: " + key);
+				continue;
+			}
+			context.getLog().info("Parsed " + source + " override: " + key + " -> " + override.getFileName() + ":" + override.getQuery());
+			overrides.add(override);
+		}
+		return overrides;
+	}
+
+	private static Document parse(File file) throws ArtifactHandlerException {
 		try {
-			java.io.File resolvedFile = resolveFile(context, fileName);
-			context.getLog().info("Parsing xml override target: " + resolvedFile.getAbsolutePath());
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setNamespaceAware(false);
 			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
 			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-			return factory.newDocumentBuilder().parse(resolvedFile);
+			return factory.newDocumentBuilder().parse(file);
 		}
 		catch (Exception e) {
-			throw new ArtifactHandlerException("Could not parse xml file for overrides: " + fileName, e);
+			throw new ArtifactHandlerException("Could not parse xml file for overrides: " + file, e);
 		}
 	}
 
-	private static void write(EnvironmentBuildContext context, Document document, String fileName) throws ArtifactHandlerException {
+	private static void write(File file, Document document) throws ArtifactHandlerException {
 		try {
-			XmlUtils.write(document, resolveFile(context, fileName));
+			XmlUtils.write(document, file);
 		}
 		catch (Exception e) {
-			throw new ArtifactHandlerException("Could not write xml file after overrides: " + fileName, e);
+			throw new ArtifactHandlerException("Could not write xml file after overrides: " + file, e);
 		}
 	}
 
@@ -208,47 +238,22 @@ public final class XmlOverrideProcessor {
 		}
 	}
 
-	private static void encryptKnownSecrets(EnvironmentBuildContext context, Document document, XPath xpath, String fileName, Map<String, AliasTarget> aliases) throws ArtifactHandlerException {
-		for (AliasTarget aliasTarget : aliases.values()) {
-			if (!aliasTarget.isEncrypted() || !fileName.equals(aliasTarget.getFileName())) {
-				continue;
-			}
+	private static void encryptKnownSecrets(EnvironmentBuildContext context, Document document, XPath xpath, List<AliasTarget> encryptedTargets) throws ArtifactHandlerException {
+		for (AliasTarget aliasTarget : encryptedTargets) {
 			NodeList nodes = nodes(xpath, document, aliasTarget.getQuery());
 			for (int i = 0; i < nodes.getLength(); i++) {
 				Node node = nodes.item(i);
-				String current = node.getNodeValue();
-				if (current == null && node.getNodeType() != Node.ATTRIBUTE_NODE && node.getFirstChild() != null && node.getFirstChild().getNodeType() == Node.TEXT_NODE) {
-					current = node.getFirstChild().getNodeValue();
-					node = node.getFirstChild();
-				}
-				if (current == null || current.trim().isEmpty() || current.startsWith("${encrypted:")) {
+				String currentValue = node.getTextContent();
+				if (currentValue == null || currentValue.trim().isEmpty() || currentValue.startsWith("${encrypted:")) {
 					continue;
 				}
 				try {
-					node.setNodeValue(context.getSecretCodec().encrypt(current));
+					node.setTextContent(context.getSecretCodec().encrypt(currentValue));
 				}
 				catch (Exception e) {
-					throw new ArtifactHandlerException("Could not encrypt secret xml value for " + aliasTarget.getQuery(), e);
+					throw new ArtifactHandlerException("Could not encrypt secret value for query: " + aliasTarget.getQuery(), e);
 				}
 			}
-		}
-	}
-
-	private static java.io.File resolveFile(EnvironmentBuildContext context, String fileName) {
-		java.io.File baseDirectory = context instanceof ArtifactScopedEnvironmentBuildContext
-			? ((ArtifactScopedEnvironmentBuildContext) context).getArtifactDirectory()
-			: context.getOutputDirectory();
-		java.io.File resolved = new java.io.File(baseDirectory, fileName);
-		context.getLog().info("Resolved target file '" + fileName + "' against base directory '" + baseDirectory.getAbsolutePath() + "' to '" + resolved.getAbsolutePath() + "' (exists=" + resolved.exists() + ")");
-		return resolved;
-	}
-
-	private static Node node(XPath xpath, Document document, String expression) throws ArtifactHandlerException {
-		try {
-			return (Node) xpath.evaluate(expression, document, XPathConstants.NODE);
-		}
-		catch (Exception e) {
-			throw new ArtifactHandlerException("Could not evaluate xpath: " + expression, e);
 		}
 	}
 
@@ -257,7 +262,16 @@ public final class XmlOverrideProcessor {
 			return (NodeList) xpath.evaluate(expression, document, XPathConstants.NODESET);
 		}
 		catch (Exception e) {
-			throw new ArtifactHandlerException("Could not evaluate xpath node set: " + expression, e);
+			throw new ArtifactHandlerException("Invalid xpath expression: " + expression, e);
+		}
+	}
+
+	private static Node node(XPath xpath, Document document, String expression) throws ArtifactHandlerException {
+		try {
+			return (Node) xpath.evaluate(expression, document, XPathConstants.NODE);
+		}
+		catch (Exception e) {
+			throw new ArtifactHandlerException("Invalid xpath expression: " + expression, e);
 		}
 	}
 }
