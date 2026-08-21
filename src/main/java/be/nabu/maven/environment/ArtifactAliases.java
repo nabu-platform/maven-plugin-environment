@@ -28,16 +28,16 @@ public final class ArtifactAliases {
 		if (artifactType == null) {
 			return aliases;
 		}
-		if ("jdbcPool".equals(artifactType)) {
+		if ("be.nabu.eai.module.jdbc.pool.JDBCPoolManager".equals(artifactType)) {
 			jdbcPool(aliases);
 		}
-		else if ("httpServer".equals(artifactType)) {
+		else if ("be.nabu.eai.module.http.server.HTTPServerManager".equals(artifactType)) {
 			httpServer(aliases);
 		}
-		else if ("virtualHost".equals(artifactType)) {
+		else if ("be.nabu.eai.module.http.virtual.VirtualHostManager".equals(artifactType)) {
 			virtualHost(aliases);
 		}
-		else if ("swaggerClient".equals(artifactType)) {
+		else if ("be.nabu.eai.module.swagger.client.SwaggerClientManager".equals(artifactType)) {
 			swaggerClient(aliases);
 		}
 		return aliases;

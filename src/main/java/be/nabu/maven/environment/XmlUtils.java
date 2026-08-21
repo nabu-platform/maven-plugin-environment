@@ -36,13 +36,17 @@ public final class XmlUtils {
 	private XmlUtils() {}
 
 	public static String readRootText(File input, String expression) throws Exception {
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		factory.setNamespaceAware(false);
-		factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-		factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-		factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-		Document document = factory.newDocumentBuilder().parse(input);
+		Document document = parse(input);
 		return (String) XPathFactory.newInstance().newXPath().evaluate(expression, document, XPathConstants.STRING);
+	}
+
+	public static String readRootAttribute(File input, String expression, String attributeName) throws Exception {
+		Document document = parse(input);
+		org.w3c.dom.Node node = (org.w3c.dom.Node) XPathFactory.newInstance().newXPath().evaluate(expression, document, XPathConstants.NODE);
+		if (node == null || node.getAttributes() == null || node.getAttributes().getNamedItem(attributeName) == null) {
+			return null;
+		}
+		return node.getAttributes().getNamedItem(attributeName).getNodeValue();
 	}
 
 	public static void write(Document document, File output) throws Exception {
@@ -77,6 +81,15 @@ public final class XmlUtils {
 			retabIndentation(new String(buffer.toByteArray(), StandardCharsets.UTF_8))
 				.getBytes(StandardCharsets.UTF_8)
 		);
+	}
+
+	private static Document parse(File input) throws Exception {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(false);
+		factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+		return factory.newDocumentBuilder().parse(input);
 	}
 
 	private static void removeWhitespaceNodes(org.w3c.dom.Node node) {

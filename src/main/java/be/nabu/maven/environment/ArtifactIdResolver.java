@@ -18,60 +18,56 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class ArtifactIdResolver {
 	private ArtifactIdResolver() {}
 
-	public static String resolve(File artifactDirectory) {
-		if (artifactDirectory == null) {
+	public static String resolve(File projectDirectory, File artifactDirectory) {
+		if (projectDirectory == null || artifactDirectory == null) {
 			return null;
 		}
-		File meta = new File(artifactDirectory, "artifact.xml");
-		if (meta.exists()) {
-			try {
-				return XmlUtils.readRootText(meta, "/artifact/id/text()");
-			}
-			catch (Exception e) {
-				throw new IllegalStateException("Could not resolve artifact id from: " + meta, e);
-			}
+		Path projectPath = projectDirectory.toPath().toAbsolutePath().normalize();
+		Path artifactPath = artifactDirectory.toPath().toAbsolutePath().normalize();
+		Path relativePath = projectPath.relativize(artifactPath);
+		StringBuilder builder = new StringBuilder(projectDirectory.getName());
+		for (Path part : relativePath) {
+			builder.append('.').append(part.toString());
 		}
-		return artifactDirectory.getName();
+		return builder.toString();
 	}
 
 	public static String resolveArtifactType(File artifactDirectory) {
 		if (artifactDirectory == null) {
 			return null;
 		}
-		if (new File(artifactDirectory, "jdbcPool.xml").exists()) {
-			return "jdbcPool";
+		File nodeFile = new File(artifactDirectory, "node.xml");
+		if (!nodeFile.exists()) {
+			return null;
 		}
-		if (new File(artifactDirectory, "httpServer.xml").exists()) {
-			return "httpServer";
+		try {
+			return XmlUtils.readRootAttribute(nodeFile, "/node", "artifactManager");
 		}
-		if (new File(artifactDirectory, "virtual-host.xml").exists()) {
-			return "virtualHost";
+		catch (Exception e) {
+			throw new IllegalStateException("Could not resolve artifact type from: " + nodeFile, e);
 		}
-		if (new File(artifactDirectory, "swagger-client.xml").exists()) {
-			return "swaggerClient";
-		}
-		return null;
 	}
 
 	public static List<ArtifactDescriptor> resolveArtifacts(File projectDirectory) {
 		List<ArtifactDescriptor> artifacts = new ArrayList<ArtifactDescriptor>();
-		collectArtifacts(projectDirectory, artifacts);
+		collectArtifacts(projectDirectory, projectDirectory, artifacts);
 		return artifacts;
 	}
 
-	private static void collectArtifacts(File directory, List<ArtifactDescriptor> artifacts) {
+	private static void collectArtifacts(File projectDirectory, File directory, List<ArtifactDescriptor> artifacts) {
 		if (directory == null || !directory.isDirectory()) {
 			return;
 		}
 		String artifactType = resolveArtifactType(directory);
 		if (artifactType != null) {
-			artifacts.add(new ArtifactDescriptor(resolve(directory), directory, artifactType));
+			artifacts.add(new ArtifactDescriptor(resolve(projectDirectory, directory), directory, artifactType));
 		}
 		File[] children = directory.listFiles();
 		if (children == null) {
@@ -79,7 +75,7 @@ public final class ArtifactIdResolver {
 		}
 		for (File child : children) {
 			if (child.isDirectory()) {
-				collectArtifacts(child, artifacts);
+				collectArtifacts(projectDirectory, child, artifacts);
 			}
 		}
 	}
