@@ -19,6 +19,7 @@ package be.nabu.maven.environment;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,21 +150,49 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 	}
 
 	private File normalizeProjectDirectory(File basedir, String artifactId) {
-		File pomFile = new File(basedir, "pom.xml");
-		if (pomFile.exists()) {
+		if (basedir == null || artifactId == null || artifactId.trim().isEmpty() || !basedir.isDirectory()) {
 			return basedir;
 		}
-		File candidate = new File(basedir, artifactId);
-		if (matchesArtifactId(candidate, artifactId)) {
-			getLog().info("Normalized project directory from " + basedir + " to " + candidate + " using artifactId match");
-			return candidate;
+		if (matchesArtifactId(basedir, artifactId)) {
+			return basedir;
 		}
-		File sourcesCandidate = new File(new File(basedir, "sources"), artifactId);
-		if (matchesArtifactId(sourcesCandidate, artifactId)) {
-			getLog().info("Normalized project directory from " + basedir + " to " + sourcesCandidate + " using sources/<artifactId> match");
-			return sourcesCandidate;
+		List<File> candidates = new ArrayList<File>();
+		collectCandidateDirectories(basedir, candidates);
+		File bestCandidate = null;
+		int bestDepth = Integer.MAX_VALUE;
+		for (File candidate : candidates) {
+			if (!matchesArtifactId(candidate, artifactId)) {
+				continue;
+			}
+			List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(candidate, artifactId);
+			if (artifacts.isEmpty()) {
+				continue;
+			}
+			int depth = basedir.toPath().toAbsolutePath().normalize().relativize(candidate.toPath().toAbsolutePath().normalize()).getNameCount();
+			if (depth < bestDepth) {
+				bestCandidate = candidate;
+				bestDepth = depth;
+			}
+		}
+		if (bestCandidate != null) {
+			getLog().info("Normalized project directory from " + basedir + " to " + bestCandidate + " using inferred artifact root");
+			return bestCandidate;
 		}
 		return basedir;
+	}
+
+	private void collectCandidateDirectories(File directory, List<File> candidates) {
+		File[] children = directory.listFiles();
+		if (children == null) {
+			return;
+		}
+		for (File child : children) {
+			if (!child.isDirectory()) {
+				continue;
+			}
+			candidates.add(child);
+			collectCandidateDirectories(child, candidates);
+		}
 	}
 
 	private boolean matchesArtifactId(File candidateDirectory, String artifactId) {
