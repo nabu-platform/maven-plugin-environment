@@ -36,10 +36,14 @@ import org.xml.sax.InputSource;
 public final class XmlOverrideProcessor {
 	private XmlOverrideProcessor() {}
 
-	public static void apply(EnvironmentBuildContext context, Map<String, AliasTarget> aliases) throws ArtifactHandlerException {
-		Map<String, List<EnvironmentOverride>> overridesByFile = groupByFile(context, aliases);
-		for (Map.Entry<String, List<EnvironmentOverride>> entry : overridesByFile.entrySet()) {
-			applyFile(context, entry.getKey(), entry.getValue(), aliases);
+	public static void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
+		for (ArtifactDescriptor artifact : ArtifactIdResolver.resolveArtifacts(context.getProjectDirectory())) {
+			ArtifactScopedEnvironmentBuildContext scopedContext = new ArtifactScopedEnvironmentBuildContext(context, artifact.getArtifactId(), artifact.getArtifactDirectory());
+			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
+			Map<String, List<EnvironmentOverride>> overridesByFile = groupByFile(scopedContext, aliases);
+			for (Map.Entry<String, List<EnvironmentOverride>> entry : overridesByFile.entrySet()) {
+				applyFile(scopedContext, entry.getKey(), entry.getValue(), aliases);
+			}
 		}
 	}
 

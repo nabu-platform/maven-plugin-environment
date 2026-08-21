@@ -18,12 +18,13 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class ArtifactIdResolver {
 	private ArtifactIdResolver() {}
 
-	public static String resolve(File projectDirectory) {
-		File artifactDirectory = resolveArtifactDirectory(projectDirectory);
+	public static String resolve(File artifactDirectory) {
 		if (artifactDirectory == null) {
 			return null;
 		}
@@ -39,32 +40,47 @@ public final class ArtifactIdResolver {
 		return artifactDirectory.getName();
 	}
 
-	public static File resolveArtifactDirectory(File projectDirectory) {
-		if (projectDirectory == null) {
+	public static String resolveArtifactType(File artifactDirectory) {
+		if (artifactDirectory == null) {
 			return null;
 		}
-		File current = projectDirectory;
-		while (current != null) {
-			if (new File(current, "artifact.xml").exists()) {
-				return current;
-			}
-			if (new File(current, "node.xml").exists()) {
-				return current;
-			}
-			if (new File(current, "jdbcPool.xml").exists()) {
-				return current;
-			}
-			if (new File(current, "httpServer.xml").exists()) {
-				return current;
-			}
-			if (new File(current, "virtual-host.xml").exists()) {
-				return current;
-			}
-			if (new File(current, "swagger-client.xml").exists()) {
-				return current;
-			}
-			current = current.getParentFile();
+		if (new File(artifactDirectory, "jdbcPool.xml").exists()) {
+			return "jdbcPool";
 		}
-		return projectDirectory;
+		if (new File(artifactDirectory, "httpServer.xml").exists()) {
+			return "httpServer";
+		}
+		if (new File(artifactDirectory, "virtual-host.xml").exists()) {
+			return "virtualHost";
+		}
+		if (new File(artifactDirectory, "swagger-client.xml").exists()) {
+			return "swaggerClient";
+		}
+		return null;
+	}
+
+	public static List<ArtifactDescriptor> resolveArtifacts(File projectDirectory) {
+		List<ArtifactDescriptor> artifacts = new ArrayList<ArtifactDescriptor>();
+		collectArtifacts(projectDirectory, artifacts);
+		return artifacts;
+	}
+
+	private static void collectArtifacts(File directory, List<ArtifactDescriptor> artifacts) {
+		if (directory == null || !directory.isDirectory()) {
+			return;
+		}
+		String artifactType = resolveArtifactType(directory);
+		if (artifactType != null) {
+			artifacts.add(new ArtifactDescriptor(resolve(directory), directory, artifactType));
+		}
+		File[] children = directory.listFiles();
+		if (children == null) {
+			return;
+		}
+		for (File child : children) {
+			if (child.isDirectory()) {
+				collectArtifacts(child, artifacts);
+			}
+		}
 	}
 }

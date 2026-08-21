@@ -72,8 +72,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 		}
 		Map<String, String> fixedValues = loadFixedValues();
 		List<ArtifactHandler> artifactHandlers = ArtifactHandlers.resolveHandlers(handlers);
-		File artifactDirectory = ArtifactIdResolver.resolveArtifactDirectory(projectDirectory);
-		EnvironmentBuildContext context = new ArtifactScopedEnvironmentBuildContext(
+		EnvironmentBuildContext context = new EnvironmentBuildContext(
 			projectDirectory,
 			outputDirectory,
 			environmentName,
@@ -81,11 +80,8 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			fixedValues,
 			new SecretCodec(secret),
 			options,
-			getLog(),
-			ArtifactIdResolver.resolve(artifactDirectory),
-			artifactDirectory
+			getLog()
 		);
-		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifactHandlers, context);
 		for (ArtifactHandler handler : artifactHandlers) {
 			try {
 				handler.apply(context);
@@ -95,7 +91,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			}
 		}
 		try {
-			XmlOverrideProcessor.apply(context, aliases);
+			XmlOverrideProcessor.apply(context);
 		}
 		catch (ArtifactHandlerException e) {
 			throw new MojoExecutionException("Could not apply xml overrides", e);
