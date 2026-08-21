@@ -18,11 +18,9 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -117,16 +115,12 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 		if (!effectiveConfigurationFile.exists()) {
 			throw new MojoExecutionException("Configured environment.configurationFile does not exist: " + effectiveConfigurationFile);
 		}
-		Properties properties = new Properties();
-		try (FileInputStream input = new FileInputStream(effectiveConfigurationFile)) {
+		try {
 			getLog().info("Loading fixed environment configuration from " + effectiveConfigurationFile);
-			properties.load(input);
+			values.putAll(EnvironmentConfigParser.parse(effectiveConfigurationFile));
 		}
 		catch (Exception e) {
 			throw new MojoExecutionException("Could not read environment.configurationFile: " + effectiveConfigurationFile, e);
-		}
-		for (String key : properties.stringPropertyNames()) {
-			values.put(key, properties.getProperty(key));
 		}
 		return values;
 	}
