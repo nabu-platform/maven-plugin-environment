@@ -34,7 +34,8 @@ public class ArtifactScopedEnvironmentBuildContext extends EnvironmentBuildConte
 			parent.getFixedValues(),
 			parent.getSecretCodec(),
 			parent.getOptions(),
-			parent.getLog()
+			parent.getLog(),
+			parent.getRootArtifactId()
 		);
 		this.artifactId = artifactId;
 		this.artifactDirectory = artifactDirectory;
@@ -49,9 +50,10 @@ public class ArtifactScopedEnvironmentBuildContext extends EnvironmentBuildConte
 			SecretCodec secretCodec,
 			Map<String, String> options,
 			Log log,
+			String rootArtifactId,
 			String artifactId,
 			File artifactDirectory) {
-		super(projectDirectory, outputDirectory, environmentName, providerValues, fixedValues, secretCodec, options, log);
+		super(projectDirectory, outputDirectory, environmentName, providerValues, fixedValues, secretCodec, options, log, rootArtifactId);
 		this.artifactId = artifactId;
 		this.artifactDirectory = artifactDirectory;
 	}

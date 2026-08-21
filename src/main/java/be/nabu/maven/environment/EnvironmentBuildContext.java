@@ -31,6 +31,7 @@ public class EnvironmentBuildContext {
 	private final SecretCodec secretCodec;
 	private final Map<String, String> options;
 	private final Log log;
+	private final String rootArtifactId;
 
 	public EnvironmentBuildContext(
 			File projectDirectory,
@@ -40,7 +41,8 @@ public class EnvironmentBuildContext {
 			Map<String, String> fixedValues,
 			SecretCodec secretCodec,
 			Map<String, String> options,
-			Log log) {
+			Log log,
+			String rootArtifactId) {
 		this.projectDirectory = projectDirectory;
 		this.outputDirectory = outputDirectory;
 		this.environmentName = environmentName;
@@ -49,6 +51,7 @@ public class EnvironmentBuildContext {
 		this.secretCodec = secretCodec;
 		this.options = options == null ? Collections.<String, String>emptyMap() : options;
 		this.log = log;
+		this.rootArtifactId = rootArtifactId;
 	}
 
 	public File getProjectDirectory() {
@@ -86,5 +89,9 @@ public class EnvironmentBuildContext {
 
 	public Log getLog() {
 		return log;
+	}
+
+	public String getRootArtifactId() {
+		return rootArtifactId;
 	}
 }

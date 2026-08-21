@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -57,6 +58,9 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 	@Parameter(property = "environment.configurationFile")
 	private File configurationFile;
 
+	@Parameter(defaultValue = "${project}", readonly = true, required = true)
+	private MavenProject project;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (environmentName == null || environmentName.trim().isEmpty()) {
@@ -80,7 +84,8 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			fixedValues,
 			new SecretCodec(secret),
 			options,
-			getLog()
+			getLog(),
+			project.getArtifactId()
 		);
 		for (ArtifactHandler handler : artifactHandlers) {
 			try {

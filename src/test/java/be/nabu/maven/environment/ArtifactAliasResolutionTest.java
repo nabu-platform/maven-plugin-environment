@@ -19,7 +19,7 @@ public class ArtifactAliasResolutionTest {
 			"<node artifactManager=\"be.nabu.eai.module.jdbc.pool.JDBCPoolManager\"/>\n"
 		).getBytes(StandardCharsets.UTF_8));
 
-		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(projectDirectory);
+		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(projectDirectory, projectDirectory.getName());
 		ArtifactDescriptor jdbc = null;
 		for (ArtifactDescriptor artifact : artifacts) {
 			if ((projectDirectory.getName() + ".databases.main.connection").equals(artifact.getArtifactId())) {

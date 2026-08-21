@@ -25,14 +25,14 @@ import java.util.List;
 public final class ArtifactIdResolver {
 	private ArtifactIdResolver() {}
 
-	public static String resolve(File projectDirectory, File artifactDirectory) {
-		if (projectDirectory == null || artifactDirectory == null) {
+	public static String resolve(File projectDirectory, File artifactDirectory, String rootArtifactId) {
+		if (projectDirectory == null || artifactDirectory == null || rootArtifactId == null || rootArtifactId.trim().isEmpty()) {
 			return null;
 		}
 		Path projectPath = projectDirectory.toPath().toAbsolutePath().normalize();
 		Path artifactPath = artifactDirectory.toPath().toAbsolutePath().normalize();
 		Path relativePath = projectPath.relativize(artifactPath);
-		StringBuilder builder = new StringBuilder(projectDirectory.getName());
+		StringBuilder builder = new StringBuilder(rootArtifactId);
 		for (Path part : relativePath) {
 			builder.append('.').append(part.toString());
 		}
@@ -57,19 +57,19 @@ public final class ArtifactIdResolver {
 		}
 	}
 
-	public static List<ArtifactDescriptor> resolveArtifacts(File projectDirectory) {
+	public static List<ArtifactDescriptor> resolveArtifacts(File projectDirectory, String rootArtifactId) {
 		List<ArtifactDescriptor> artifacts = new ArrayList<ArtifactDescriptor>();
-		collectArtifacts(projectDirectory, projectDirectory, artifacts);
+		collectArtifacts(projectDirectory, projectDirectory, rootArtifactId, artifacts);
 		return artifacts;
 	}
 
-	private static void collectArtifacts(File projectDirectory, File directory, List<ArtifactDescriptor> artifacts) {
+	private static void collectArtifacts(File projectDirectory, File directory, String rootArtifactId, List<ArtifactDescriptor> artifacts) {
 		if (directory == null || !directory.isDirectory()) {
 			return;
 		}
 		String artifactType = resolveArtifactType(directory);
 		if (artifactType != null) {
-			artifacts.add(new ArtifactDescriptor(resolve(projectDirectory, directory), directory, artifactType));
+			artifacts.add(new ArtifactDescriptor(resolve(projectDirectory, directory, rootArtifactId), directory, artifactType));
 		}
 		File[] children = directory.listFiles();
 		if (children == null) {
@@ -77,7 +77,7 @@ public final class ArtifactIdResolver {
 		}
 		for (File child : children) {
 			if (child.isDirectory()) {
-				collectArtifacts(projectDirectory, child, artifacts);
+				collectArtifacts(projectDirectory, child, rootArtifactId, artifacts);
 			}
 		}
 	}

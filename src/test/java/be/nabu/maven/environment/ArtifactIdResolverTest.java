@@ -20,7 +20,7 @@ public class ArtifactIdResolverTest {
 
 		Assert.assertEquals(
 			projectDirectory.getName() + ".databases.main.connection",
-			ArtifactIdResolver.resolve(projectDirectory, artifactDirectory)
+			ArtifactIdResolver.resolve(projectDirectory, artifactDirectory, projectDirectory.getName())
 		);
 	}
 
@@ -56,7 +56,7 @@ public class ArtifactIdResolverTest {
 			"<node artifactManager=\"be.nabu.eai.module.http.virtual.VirtualHostManager\"/>\n"
 		).getBytes(StandardCharsets.UTF_8));
 
-		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(projectDirectory);
+		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(projectDirectory, projectDirectory.getName());
 		Assert.assertEquals(2, artifacts.size());
 		ArtifactDescriptor jdbc = find(artifacts, projectDirectory.getName() + ".databases.main.connection");
 		ArtifactDescriptor host = find(artifacts, projectDirectory.getName() + ".documents.host");

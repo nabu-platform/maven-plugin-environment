@@ -38,7 +38,7 @@ public final class XmlOverrideProcessor {
 	private XmlOverrideProcessor() {}
 
 	public static void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
-		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(context.getProjectDirectory());
+		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(context.getProjectDirectory(), context.getRootArtifactId());
 		Map<String, ArtifactDescriptor> artifactsById = new LinkedHashMap<String, ArtifactDescriptor>();
 		context.getLog().info("Discovered " + artifacts.size() + " artifact(s) under project root " + context.getProjectDirectory().getAbsolutePath());
 		for (ArtifactDescriptor artifact : artifacts) {
