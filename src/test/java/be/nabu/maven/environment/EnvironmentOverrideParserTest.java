@@ -1,0 +1,45 @@
+package be.nabu.maven.environment;
+
+import java.util.Map;
+import org.junit.Assert;
+import org.junit.Test;
+
+public class EnvironmentOverrideParserTest {
+	@Test
+	public void parsesCanonicalOverride() {
+		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases("be.nabu.eai.module.jdbc.pool.JDBCPoolManager");
+		EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(
+			"bebatOne.databases.main.connection:jdbcPool.xml:/jdbcPool/username=text",
+			aliases
+		);
+		Assert.assertNotNull(override);
+		Assert.assertEquals("bebatOne.databases.main.connection", override.getArtifactId());
+		Assert.assertEquals("jdbcPool.xml", override.getFileName());
+		Assert.assertEquals("/jdbcPool/username", override.getQuery());
+		Assert.assertEquals("text", override.getValue());
+	}
+
+	@Test
+	public void parsesAliasOverrideForJdbcPool() {
+		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases("be.nabu.eai.module.jdbc.pool.JDBCPoolManager");
+		EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(
+			"bebatOne.databases.main.connection:username=bebatone_qlty",
+			aliases
+		);
+		Assert.assertNotNull(override);
+		Assert.assertEquals("bebatOne.databases.main.connection", override.getArtifactId());
+		Assert.assertEquals("jdbcPool.xml", override.getFileName());
+		Assert.assertEquals("/jdbcPool/username/text()", override.getQuery());
+		Assert.assertEquals("bebatone_qlty", override.getValue());
+	}
+
+	@Test
+	public void rejectsAliasWhenArtifactTypeDoesNotDefineIt() {
+		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases("be.nabu.eai.module.http.server.HTTPServerManager");
+		EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(
+			"bebatOne.databases.main.connection:username=bebatone_qlty",
+			aliases
+		);
+		Assert.assertNull(override);
+	}
+}

@@ -39,6 +39,14 @@ public final class EnvironmentOverrideParser {
 		return overrides;
 	}
 
+	static EnvironmentOverride parseForTest(String line, Map<String, AliasTarget> aliases) {
+		int separator = line.indexOf('=');
+		if (separator < 0) {
+			return null;
+		}
+		return parse(line.substring(0, separator), line.substring(separator + 1), aliases);
+	}
+
 	private static EnvironmentOverride parse(String key, String value, Map<String, AliasTarget> aliases) {
 		int firstColon = key.indexOf(':');
 		if (firstColon <= 0 || firstColon == key.length() - 1) {

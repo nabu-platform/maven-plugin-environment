@@ -37,9 +37,13 @@ public final class XmlOverrideProcessor {
 	private XmlOverrideProcessor() {}
 
 	public static void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
-		for (ArtifactDescriptor artifact : ArtifactIdResolver.resolveArtifacts(context.getProjectDirectory())) {
+		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(context.getProjectDirectory());
+		context.getLog().info("Discovered " + artifacts.size() + " artifact(s) under project root " + context.getProjectDirectory().getAbsolutePath());
+		for (ArtifactDescriptor artifact : artifacts) {
+			context.getLog().info("Artifact descriptor: id='" + artifact.getArtifactId() + "' type='" + artifact.getArtifactType() + "' dir='" + artifact.getArtifactDirectory().getAbsolutePath() + "'");
 			ArtifactScopedEnvironmentBuildContext scopedContext = new ArtifactScopedEnvironmentBuildContext(context, artifact.getArtifactId(), artifact.getArtifactDirectory());
 			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
+			context.getLog().info("Alias keys for artifact '" + artifact.getArtifactId() + "': " + aliases.keySet());
 			Map<String, List<EnvironmentOverride>> overridesByFile = groupByFile(scopedContext, aliases);
 			for (Map.Entry<String, List<EnvironmentOverride>> entry : overridesByFile.entrySet()) {
 				applyFile(scopedContext, entry.getKey(), entry.getValue(), aliases);
@@ -58,6 +62,7 @@ public final class XmlOverrideProcessor {
 				context.getLog().warn("Skipping override for artifact '" + override.getArtifactId() + "' while current artifact scope is '" + scopedArtifactId + "': " + override.getArtifactId() + ":" + override.getFileName() + ":" + override.getQuery());
 				continue;
 			}
+			context.getLog().info("Matched override artifact id '" + override.getArtifactId() + "' to current artifact scope '" + scopedArtifactId + "'");
 			List<EnvironmentOverride> fileOverrides = grouped.get(override.getFileName());
 			if (fileOverrides == null) {
 				fileOverrides = new ArrayList<EnvironmentOverride>();
@@ -233,7 +238,9 @@ public final class XmlOverrideProcessor {
 		java.io.File baseDirectory = context instanceof ArtifactScopedEnvironmentBuildContext
 			? ((ArtifactScopedEnvironmentBuildContext) context).getArtifactDirectory()
 			: context.getOutputDirectory();
-		return new java.io.File(baseDirectory, fileName);
+		java.io.File resolved = new java.io.File(baseDirectory, fileName);
+		context.getLog().info("Resolved target file '" + fileName + "' against base directory '" + baseDirectory.getAbsolutePath() + "' to '" + resolved.getAbsolutePath() + "' (exists=" + resolved.exists() + ")");
+		return resolved;
 	}
 
 	private static Node node(XPath xpath, Document document, String expression) throws ArtifactHandlerException {
