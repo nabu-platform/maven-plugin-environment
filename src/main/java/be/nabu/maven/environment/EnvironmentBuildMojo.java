@@ -18,10 +18,13 @@
 package be.nabu.maven.environment;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -75,7 +78,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			throw new MojoExecutionException("Could not create output directory: " + outputDirectory);
 		}
 		MavenProject effectiveProject = resolveEffectiveProject();
-		File effectiveProjectDirectory = effectiveProject.getBasedir();
+		File effectiveProjectDirectory = normalizeProjectDirectory(effectiveProject.getBasedir(), effectiveProject.getArtifactId());
 		String effectiveRootArtifactId = effectiveProject.getArtifactId();
 		getLog().info("Injected Maven project artifact id: " + project.getArtifactId());
 		getLog().info("Injected Maven project basedir: " + project.getBasedir());
@@ -143,6 +146,39 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			return session.getCurrentProject();
 		}
 		return project;
+	}
+
+	private File normalizeProjectDirectory(File basedir, String artifactId) {
+		File pomFile = new File(basedir, "pom.xml");
+		if (pomFile.exists()) {
+			return basedir;
+		}
+		File candidate = new File(basedir, artifactId);
+		if (matchesArtifactId(candidate, artifactId)) {
+			getLog().info("Normalized project directory from " + basedir + " to " + candidate + " using artifactId match");
+			return candidate;
+		}
+		File sourcesCandidate = new File(new File(basedir, "sources"), artifactId);
+		if (matchesArtifactId(sourcesCandidate, artifactId)) {
+			getLog().info("Normalized project directory from " + basedir + " to " + sourcesCandidate + " using sources/<artifactId> match");
+			return sourcesCandidate;
+		}
+		return basedir;
+	}
+
+	private boolean matchesArtifactId(File candidateDirectory, String artifactId) {
+		File candidatePom = new File(candidateDirectory, "pom.xml");
+		if (!candidatePom.exists()) {
+			return false;
+		}
+		try (FileInputStream input = new FileInputStream(candidatePom)) {
+			Model model = new MavenXpp3Reader().read(input);
+			return artifactId.equals(model.getArtifactId());
+		}
+		catch (Exception e) {
+			getLog().warn("Could not inspect candidate pom for project normalization: " + candidatePom + " due to " + e.getMessage());
+			return false;
+		}
 	}
 
 	private EnvironmentValueProvider createProvider() throws MojoExecutionException {
