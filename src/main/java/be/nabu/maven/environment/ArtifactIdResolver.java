@@ -48,7 +48,9 @@ public final class ArtifactIdResolver {
 			return null;
 		}
 		try {
-			return XmlUtils.readRootAttribute(nodeFile, "/node", "artifactManager");
+			String artifactManager = XmlUtils.readRootAttribute(nodeFile, "/node", "artifactManager");
+			System.out.println("[environment-plugin] node.xml artifactManager for " + artifactDirectory.getAbsolutePath() + " = " + artifactManager);
+			return artifactManager;
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Could not resolve artifact type from: " + nodeFile, e);
