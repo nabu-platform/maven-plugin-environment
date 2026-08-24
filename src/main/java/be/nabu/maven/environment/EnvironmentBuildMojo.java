@@ -211,14 +211,15 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 	}
 
 	private EnvironmentValueProvider createProvider() throws MojoExecutionException {
-		if (providerClass == null || providerClass.trim().isEmpty()) {
-			return null;
-		}
+		String effectiveProviderClass = providerClass == null || providerClass.trim().isEmpty()
+			? SystemEnvironmentValueProvider.class.getName()
+			: providerClass;
 		try {
-			Class<?> implementationClass = Class.forName(providerClass);
+			Class<?> implementationClass = Class.forName(effectiveProviderClass);
+			getLog().info("Using environment value provider: " + effectiveProviderClass);
 			Object instance = implementationClass.getDeclaredConstructor().newInstance();
 			if (!(instance instanceof ConfigurableEnvironmentValueProvider)) {
-				throw new MojoExecutionException("Configured provider does not implement ConfigurableEnvironmentValueProvider: " + providerClass);
+				throw new MojoExecutionException("Configured provider does not implement ConfigurableEnvironmentValueProvider: " + effectiveProviderClass);
 			}
 			((ConfigurableEnvironmentValueProvider) instance).configure(
 				providerConfiguration == null ? new LinkedHashMap<String, String>() : providerConfiguration,
@@ -230,7 +231,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			throw e;
 		}
 		catch (Exception e) {
-			throw new MojoExecutionException("Could not instantiate provider: " + providerClass, e);
+			throw new MojoExecutionException("Could not instantiate provider: " + effectiveProviderClass, e);
 		}
 	}
 }

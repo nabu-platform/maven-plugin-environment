@@ -89,7 +89,7 @@ public final class XmlOverrideProcessor {
 		}
 	}
 
-	private static List<EnvironmentOverride> parseOverrides(EnvironmentBuildContext context, Map<String, ArtifactDescriptor> artifactsById, Map<String, String> values, String source) {
+	private static List<EnvironmentOverride> parseOverrides(EnvironmentBuildContext context, Map<String, ArtifactDescriptor> artifactsById, Map<String, String> values, String source) throws ArtifactHandlerException {
 		List<EnvironmentOverride> overrides = new ArrayList<EnvironmentOverride>();
 		for (Map.Entry<String, String> entry : values.entrySet()) {
 			String key = entry.getKey();

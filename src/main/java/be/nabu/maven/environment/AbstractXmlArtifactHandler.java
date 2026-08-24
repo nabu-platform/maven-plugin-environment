@@ -84,7 +84,7 @@ public abstract class AbstractXmlArtifactHandler implements ArtifactHandler {
 		}
 	}
 
-	protected String value(EnvironmentBuildContext context, String key) {
+	protected String value(EnvironmentBuildContext context, String key) throws ArtifactHandlerException {
 		return EnvironmentValues.scalar(context, key);
 	}
 }

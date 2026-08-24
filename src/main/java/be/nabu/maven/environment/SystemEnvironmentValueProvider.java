@@ -42,7 +42,7 @@ public class SystemEnvironmentValueProvider implements ConfigurableEnvironmentVa
 				}
 				key = key.substring(variablePrefix.length());
 			}
-			key = normalizeKey(key);
+			key = key == null ? null : key.trim();
 			if (key == null || key.isEmpty()) {
 				continue;
 			}
@@ -54,10 +54,4 @@ public class SystemEnvironmentValueProvider implements ConfigurableEnvironmentVa
 		return values;
 	}
 
-	private String normalizeKey(String key) {
-		String normalized = key.trim();
-		normalized = normalized.replace("__", ":");
-		normalized = normalized.replace('_', '.');
-		return normalized;
-	}
 }

@@ -34,7 +34,7 @@ public final class EnvironmentValues {
 
 	private EnvironmentValues() {}
 
-	public static String scalar(EnvironmentBuildContext context, String key) {
+	public static String scalar(EnvironmentBuildContext context, String key) throws ArtifactHandlerException {
 		String qualifiedKey = qualifiedKey(context, key);
 		String providerValue = qualifiedKey == null ? null : context.getProviderValues().get(qualifiedKey);
 		if (providerValue == null) {
@@ -47,7 +47,7 @@ public final class EnvironmentValues {
 		if (fixedValue == null) {
 			fixedValue = context.getFixedValues().get(key);
 		}
-		return fixedValue == null ? null : resolvePlaceholders(context, fixedValue);
+		return fixedValue == null ? null : resolvePlaceholders(context, key, fixedValue);
 	}
 
 	public static List<String> list(EnvironmentBuildContext context, String key, boolean allowCommaSeparatedFallback) throws ArtifactHandlerException {
@@ -87,7 +87,7 @@ public final class EnvironmentValues {
 		return null;
 	}
 
-	public static Map<Integer, String> indexedValues(EnvironmentBuildContext context, String key) {
+	public static Map<Integer, String> indexedValues(EnvironmentBuildContext context, String key) throws ArtifactHandlerException {
 		String qualifiedKey = qualifiedKey(context, key);
 		Map<Integer, String> result = qualifiedKey == null ? new LinkedHashMap<Integer, String>() : indexedValues(context.getProviderValues(), qualifiedKey);
 		if (result.isEmpty()) {
@@ -105,7 +105,7 @@ public final class EnvironmentValues {
 		}
 		Map<Integer, String> resolved = new LinkedHashMap<Integer, String>();
 		for (Map.Entry<Integer, String> entry : fixedValues.entrySet()) {
-			resolved.put(entry.getKey(), resolvePlaceholders(context, entry.getValue()));
+			resolved.put(entry.getKey(), resolvePlaceholders(context, key + "[" + entry.getKey() + "]", entry.getValue()));
 		}
 		return resolved;
 	}
@@ -139,12 +139,16 @@ public final class EnvironmentValues {
 		return artifactId + ":" + key;
 	}
 
-	private static String resolvePlaceholders(EnvironmentBuildContext context, String value) {
+	private static String resolvePlaceholders(EnvironmentBuildContext context, String key, String value) throws ArtifactHandlerException {
 		Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
 		StringBuffer buffer = new StringBuffer();
 		while (matcher.find()) {
-			String replacement = context.getProviderValues().get(matcher.group(1));
-			matcher.appendReplacement(buffer, Matcher.quoteReplacement(replacement == null ? matcher.group(0) : replacement));
+			String placeholderKey = matcher.group(1);
+			String replacement = context.getProviderValues().get(placeholderKey);
+			if (replacement == null) {
+				throw new ArtifactHandlerException("Could not resolve placeholder '${" + placeholderKey + "}' for key: " + key);
+			}
+			matcher.appendReplacement(buffer, Matcher.quoteReplacement(replacement));
 		}
 		matcher.appendTail(buffer);
 		return buffer.toString();
