@@ -36,10 +36,15 @@ public class EnvironmentOverrideParserTest {
 	@Test
 	public void rejectsAliasWhenArtifactTypeDoesNotDefineIt() {
 		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases("be.nabu.eai.module.http.server.HTTPServerManager");
-		EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(
-			"bebatOne.databases.main.connection:username=bebatone_qlty",
-			aliases
-		);
-		Assert.assertNull(override);
+		try {
+			EnvironmentOverrideParser.parseForTest(
+				"bebatOne.databases.main.connection:username=bebatone_qlty",
+				aliases
+			);
+			Assert.fail("Expected unknown alias to throw an exception");
+		}
+		catch (IllegalArgumentException e) {
+			Assert.assertTrue(e.getMessage().contains("Unknown alias"));
+		}
 	}
 }

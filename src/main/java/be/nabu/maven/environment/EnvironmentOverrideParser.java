@@ -20,8 +20,11 @@ package be.nabu.maven.environment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public final class EnvironmentOverrideParser {
+	private static final Pattern ALIAS_PATTERN = Pattern.compile("\\w+");
+
 	private EnvironmentOverrideParser() {}
 
 	public static List<EnvironmentOverride> parse(Map<String, String> values, Map<String, AliasTarget> aliases, org.apache.maven.plugin.logging.Log log, String source) {
@@ -65,9 +68,12 @@ public final class EnvironmentOverrideParser {
 				return new EnvironmentOverride(artifactId, fileName, query, value);
 			}
 		}
+		if (!ALIAS_PATTERN.matcher(remainder).matches()) {
+			throw new IllegalArgumentException("Invalid alias in override key '" + key + "': '" + remainder + "'");
+		}
 		AliasTarget aliasTarget = aliases.get(remainder);
 		if (aliasTarget == null) {
-			return null;
+			throw new IllegalArgumentException("Unknown alias in override key '" + key + "': '" + remainder + "'");
 		}
 		return new EnvironmentOverride(artifactId, aliasTarget.getFileName(), aliasTarget.getQuery(), value);
 	}
