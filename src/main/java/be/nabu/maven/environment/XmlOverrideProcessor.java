@@ -194,9 +194,37 @@ public final class XmlOverrideProcessor {
 			node.setNodeValue(value);
 			return;
 		}
-		if (node.getChildNodes().getLength() == 1 && node.getFirstChild().getNodeType() == Node.TEXT_NODE) {
-			node.getFirstChild().setNodeValue(value);
+		if (isSimpleElement(node)) {
+			replaceSimpleElementValue(node, value);
 			return;
+		}
+		node.setTextContent(value);
+	}
+
+	private static boolean isSimpleElement(Node node) {
+		if (node.getNodeType() != Node.ELEMENT_NODE) {
+			return false;
+		}
+		NodeList children = node.getChildNodes();
+		if (children.getLength() == 0) {
+			return true;
+		}
+		if (children.getLength() == 1 && children.item(0).getNodeType() == Node.TEXT_NODE) {
+			return true;
+		}
+		return false;
+	}
+
+	private static void replaceSimpleElementValue(Node node, String value) {
+		Node parent = node.getParentNode();
+		if (parent != null) {
+			NodeList siblings = parent.getChildNodes();
+			for (int i = siblings.getLength() - 1; i >= 0; i--) {
+				Node sibling = siblings.item(i);
+				if (sibling != node && sibling.getNodeType() == Node.ELEMENT_NODE && sibling.getNodeName().equals(node.getNodeName())) {
+					parent.removeChild(sibling);
+				}
+			}
 		}
 		node.setTextContent(value);
 	}

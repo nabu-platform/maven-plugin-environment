@@ -169,6 +169,7 @@ public final class ArtifactAliases {
 		alias(aliases, "httpClient", "swagger-client.xml", "/swaggerClient/httpClient/text()", false);
 		alias(aliases, "username", "swagger-client.xml", "/swaggerClient/username/text()", false);
 		alias(aliases, "password", "swagger-client.xml", "/swaggerClient/password/text()", false);
+		alias(aliases, "security", "swagger-client.xml", "/swaggerClient/security", false);
 		alias(aliases, "allowDomain", "swagger-client.xml", "/swaggerClient/allowDomain/text()", false);
 		alias(aliases, "apiHeaderName", "swagger-client.xml", "/swaggerClient/apiHeaderName/text()", false);
 		alias(aliases, "apiQueryName", "swagger-client.xml", "/swaggerClient/apiQueryName/text()", false);
