@@ -105,7 +105,8 @@ public final class XmlOverrideProcessor {
 			}
 			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
 			context.getLog().info("Alias keys for artifact '" + artifactId + "': " + aliases.keySet());
-			EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(key + "=" + entry.getValue(), aliases);
+			String resolvedValue = "fixed".equals(source) ? EnvironmentValues.scalar(new ArtifactScopedEnvironmentBuildContext(context, artifactId, artifact.getArtifactDirectory()), key.substring(firstColon + 1).trim()) : entry.getValue();
+			EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(key + "=" + resolvedValue, aliases);
 			if (override == null) {
 				context.getLog().warn("Could not parse " + source + " override key: " + key);
 				continue;
