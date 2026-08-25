@@ -35,7 +35,7 @@ public class ConfigurationArtifactHandler extends AbstractXmlArtifactHandler {
 			return;
 		}
 		Document document = parse(configuration);
-		DefinitionModel definitionModel = DefinitionParser.parse(definition);
+		requireRootElement(document, "configuration");
 		XPath xpath = newXPath();
 		Map<String, String> scalarValues = new LinkedHashMap<String, String>();
 		for (Map.Entry<String, String> entry : context.getProviderValues()
@@ -55,27 +55,25 @@ public class ConfigurationArtifactHandler extends AbstractXmlArtifactHandler {
 			scalarValues.put(key, entry.getValue());
 		}
 		for (Map.Entry<String, String> entry : scalarValues.entrySet()) {
-			DefinitionField field = definitionModel.getField(entry.getKey());
-			if (field == null || !field.isEnvironmentSpecific()) {
-				continue;
-			}
-			if (field.isList()) {
-				List<String> list = EnvironmentValues.list(context, entry.getKey(), true);
-				if (list != null) {
-					for (int i = 0; i < list.size(); i++) {
-						replaceNodeValue(
-							context,
-							node(xpath, document, "/configuration/" + entry.getKey() + "[" + (i + 1) + "]/text()"),
-							list.get(i),
-							false
-						);
-					}
+			List<String> list = EnvironmentValues.list(context, entry.getKey(), true);
+			if (list != null) {
+				for (int i = 0; i < list.size(); i++) {
+					replaceNodeValue(
+						context,
+						document,
+						xpath,
+						"/configuration/" + entry.getKey() + "[" + (i + 1) + "]/text()",
+						list.get(i),
+						false
+					);
 				}
 			}
 			else {
 				replaceNodeValue(
 					context,
-					node(xpath, document, "/configuration/" + entry.getKey() + "/text()"),
+					document,
+					xpath,
+					"/configuration/" + entry.getKey() + "/text()",
 					entry.getValue(),
 					false
 				);
