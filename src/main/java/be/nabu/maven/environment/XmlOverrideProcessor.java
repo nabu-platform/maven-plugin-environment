@@ -147,7 +147,7 @@ public final class XmlOverrideProcessor {
 	}
 
 	private static void applyOverride(EnvironmentBuildContext context, Document document, XPath xpath, EnvironmentOverride override) throws ArtifactHandlerException {
-		String query = override.getQuery();
+		String query = XmlUtils.normalizeElementPath(document, override.getQuery());
 		String value = override.getValue();
 		if (query.endsWith("[?]")) {
 			append(document, xpath, query.substring(0, query.length() - 3), value);
@@ -155,7 +155,13 @@ public final class XmlOverrideProcessor {
 		}
 		NodeList nodes = nodes(xpath, document, query);
 		if (nodes.getLength() == 0) {
-			context.getLog().warn("No xml nodes matched override query: " + query + " in " + override.getFileName() + " for artifact '" + override.getArtifactId() + "'");
+			if (value == null || value.trim().isEmpty()) {
+				context.getLog().info("Skipping empty override because no xml nodes matched query '" + query + "' in " + override.getFileName() + " for artifact '" + override.getArtifactId() + "'");
+				return;
+			}
+			Node created = XmlUtils.ensureElementPath(document, query);
+			context.getLog().info("Created missing xml path for artifact '" + override.getArtifactId() + "' file '" + override.getFileName() + "' query '" + query + "'");
+			applyValue(document, created, value);
 			return;
 		}
 		context.getLog().info("Applying override to " + nodes.getLength() + " node(s) for artifact '" + override.getArtifactId() + "' file '" + override.getFileName() + "' query '" + query + "'");

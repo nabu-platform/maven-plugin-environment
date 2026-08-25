@@ -31,6 +31,9 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public final class XmlUtils {
 	private XmlUtils() {}
@@ -47,6 +50,92 @@ public final class XmlUtils {
 			return null;
 		}
 		return node.getAttributes().getNamedItem(attributeName).getNodeValue();
+	}
+
+	public static String normalizeElementPath(Document document, String expression) throws ArtifactHandlerException {
+		Element root = requireRootElement(document);
+		String normalized = expression == null ? "" : expression.trim();
+		if (normalized.isEmpty()) {
+			throw new ArtifactHandlerException("XML path can not be empty");
+		}
+		if (!normalized.startsWith("/")) {
+			normalized = "/" + root.getTagName() + "/" + normalized;
+		}
+		else if (!normalized.startsWith("//")) {
+			int separator = normalized.indexOf('/', 1);
+			String rootSegment = separator < 0 ? normalized.substring(1) : normalized.substring(1, separator);
+			if (isElementName(rootSegment) && !root.getTagName().equals(rootSegment)) {
+				throw new ArtifactHandlerException("Expected root element '" + rootSegment + "' but found '" + root.getTagName() + "'");
+			}
+		}
+		return normalized;
+	}
+
+	public static Node ensureElementPath(Document document, String expression) throws ArtifactHandlerException {
+		String normalized = normalizeElementPath(document, expression);
+		boolean textTarget = normalized.endsWith("/text()");
+		String path = textTarget ? normalized.substring(0, normalized.length() - "/text()".length()) : normalized;
+		String[] segments = path.substring(1).split("/");
+		if (segments.length == 0) {
+			throw new ArtifactHandlerException("Can not create missing node for xpath: " + expression);
+		}
+		Element root = requireRootElement(document);
+		if (!root.getTagName().equals(segments[0])) {
+			throw new ArtifactHandlerException("Expected root element '" + segments[0] + "' but found '" + root.getTagName() + "'");
+		}
+		Element current = root;
+		for (int i = 1; i < segments.length; i++) {
+			String segment = segments[i];
+			if (!isElementName(segment)) {
+				throw new ArtifactHandlerException("Can not create missing node for xpath: " + expression);
+			}
+			Element child = firstChild(current, segment);
+			if (child == null) {
+				child = document.createElement(segment);
+				current.appendChild(child);
+			}
+			current = child;
+		}
+		if (!textTarget) {
+			return current;
+		}
+		NodeList children = current.getChildNodes();
+		for (int i = 0; i < children.getLength(); i++) {
+			if (children.item(i).getNodeType() == Node.TEXT_NODE) {
+				return children.item(i);
+			}
+		}
+		return current.appendChild(document.createTextNode(""));
+	}
+
+	public static void requireRootElement(Document document, String expectedRootElement) throws ArtifactHandlerException {
+		Element root = requireRootElement(document);
+		if (!expectedRootElement.equals(root.getTagName())) {
+			throw new ArtifactHandlerException("Expected root element '" + expectedRootElement + "' but found '" + root.getTagName() + "'");
+		}
+	}
+
+	private static Element requireRootElement(Document document) throws ArtifactHandlerException {
+		Element root = document.getDocumentElement();
+		if (root == null) {
+			throw new ArtifactHandlerException("XML document has no root element");
+		}
+		return root;
+	}
+
+	private static boolean isElementName(String segment) {
+		return !segment.isEmpty() && !segment.contains("[") && !segment.contains("@") && !segment.contains("(");
+	}
+
+	private static Element firstChild(Element parent, String name) {
+		NodeList children = parent.getChildNodes();
+		for (int i = 0; i < children.getLength(); i++) {
+			Node child = children.item(i);
+			if (child.getNodeType() == Node.ELEMENT_NODE && name.equals(child.getNodeName())) {
+				return (Element) child;
+			}
+		}
+		return null;
 	}
 
 	public static void write(Document document, File output) throws Exception {
