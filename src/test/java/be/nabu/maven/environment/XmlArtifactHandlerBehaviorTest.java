@@ -28,7 +28,7 @@ public class XmlArtifactHandlerBehaviorTest {
 
 		new SmtpClientArtifactHandler().apply(context);
 
-		String output = Files.readString(new File(context.getOutputDirectory(), "smtp-server.xml").toPath());
+		String output = new String(Files.readAllBytes(new File(context.getOutputDirectory(), "smtp-server.xml").toPath()), StandardCharsets.UTF_8);
 		Assert.assertTrue(output.contains("<host>smtp.gmail.com</host>"));
 		Assert.assertTrue(output.contains("<username>help@cubitec.be</username>"));
 		Assert.assertTrue(output.contains("<subjectTemplate>[DEV]</subjectTemplate>"));
@@ -64,7 +64,7 @@ public class XmlArtifactHandlerBehaviorTest {
 
 		new HttpServerArtifactHandler().apply(context);
 
-		String output = Files.readString(new File(context.getOutputDirectory(), "httpServer.xml").toPath());
+		String output = new String(Files.readAllBytes(new File(context.getOutputDirectory(), "httpServer.xml").toPath()), StandardCharsets.UTF_8);
 		Assert.assertTrue(output.contains("<maxSizePerRequest>20971520</maxSizePerRequest>"));
 	}
 
@@ -79,7 +79,7 @@ public class XmlArtifactHandlerBehaviorTest {
 
 		new FeatureSetArtifactHandler().apply(context);
 
-		String output = Files.readString(new File(context.getOutputDirectory(), "feature-set.xml").toPath());
+		String output = new String(Files.readAllBytes(new File(context.getOutputDirectory(), "feature-set.xml").toPath()), StandardCharsets.UTF_8);
 		Assert.assertTrue(output.contains("<features>DEV</features>"));
 		Assert.assertFalse(output.contains("<disabled>DEV</disabled>"));
 	}
