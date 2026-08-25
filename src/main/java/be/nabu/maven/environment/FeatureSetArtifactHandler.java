@@ -35,9 +35,10 @@ public class FeatureSetArtifactHandler extends AbstractXmlArtifactHandler {
 			return;
 		}
 		Document document = parse(input);
+		requireRootElement(document, "features");
 		XPath xpath = newXPath();
-		List<String> enabled = values(xpath, document, "/featureSet/features/text()");
-		List<String> disabled = values(xpath, document, "/featureSet/disabled/text()");
+		List<String> enabled = values(xpath, document, "/features/features/text()");
+		List<String> disabled = values(xpath, document, "/features/disabled/text()");
 		for (Map.Entry<String, String> entry : context.getProviderValues()
 			.entrySet()) {
 			applySetting(enabled, disabled, entry.getKey(), entry.getValue());
@@ -49,8 +50,8 @@ public class FeatureSetArtifactHandler extends AbstractXmlArtifactHandler {
 			}
 			applySetting(enabled, disabled, entry.getKey(), EnvironmentValues.scalar(context, entry.getKey()));
 		}
-		rewriteList(document, enabled, "/featureSet/features", "features");
-		rewriteList(document, disabled, "/featureSet/disabled", "disabled");
+		rewriteList(document, enabled, "/features/features", "features");
+		rewriteList(document, disabled, "/features/disabled", "disabled");
 		write(document, new File(context.getOutputDirectory(), "feature-set.xml"));
 	}
 

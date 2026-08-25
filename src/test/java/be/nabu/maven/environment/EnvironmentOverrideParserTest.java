@@ -47,4 +47,16 @@ public class EnvironmentOverrideParserTest {
 			Assert.assertTrue(e.getMessage().contains("Unknown alias"));
 		}
 	}
+
+	@Test
+	public void parsesAliasOverrideForSmtpServer() {
+		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases("be.nabu.eai.module.smtp.SMTPClientManager");
+		EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(
+			"myBebat.shared.smtpClientCubitec:username=help@cubitec.be",
+			aliases
+		);
+		Assert.assertNotNull(override);
+		Assert.assertEquals("smtp-server.xml", override.getFileName());
+		Assert.assertEquals("/smtpServer/username/text()", override.getQuery());
+	}
 }

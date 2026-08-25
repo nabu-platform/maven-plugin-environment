@@ -204,22 +204,22 @@ public final class ArtifactAliases {
 	}
 
 	private static void smtpClient(Map<String, AliasTarget> aliases) {
-		alias(aliases, "host", "smtp-server.xml", "/smtpClient/host/text()", false);
-		alias(aliases, "port", "smtp-server.xml", "/smtpClient/port/text()", false);
-		alias(aliases, "from", "smtp-server.xml", "/smtpClient/from/text()", false);
-		alias(aliases, "subjectTemplate", "smtp-server.xml", "/smtpClient/subjectTemplate/text()", false);
-		alias(aliases, "clientHost", "smtp-server.xml", "/smtpClient/clientHost/text()", false);
-		alias(aliases, "charset", "smtp-server.xml", "/smtpClient/charset/text()", false);
-		alias(aliases, "username", "smtp-server.xml", "/smtpClient/username/text()", false);
-		alias(aliases, "password", "smtp-server.xml", "/smtpClient/password/text()", true);
-		alias(aliases, "loginMethod", "smtp-server.xml", "/smtpClient/loginMethod/text()", false);
-		alias(aliases, "implicitSSL", "smtp-server.xml", "/smtpClient/implicitSSL/text()", false);
-		alias(aliases, "startTls", "smtp-server.xml", "/smtpClient/startTls/text()", false);
-		alias(aliases, "keystore", "smtp-server.xml", "/smtpClient/keystore/text()", false);
-		alias(aliases, "blacklist", "smtp-server.xml", "/smtpClient/blacklist/text()", false);
-		alias(aliases, "overrideToInMime", "smtp-server.xml", "/smtpClient/overrideToInMime/text()", false);
-		alias(aliases, "connectionTimeout", "smtp-server.xml", "/smtpClient/connectionTimeout/text()", false);
-		alias(aliases, "socketTimeout", "smtp-server.xml", "/smtpClient/socketTimeout/text()", false);
+		alias(aliases, "host", "smtp-server.xml", "/smtpServer/host/text()", false);
+		alias(aliases, "port", "smtp-server.xml", "/smtpServer/port/text()", false);
+		alias(aliases, "from", "smtp-server.xml", "/smtpServer/from/text()", false);
+		alias(aliases, "subjectTemplate", "smtp-server.xml", "/smtpServer/subjectTemplate/text()", false);
+		alias(aliases, "clientHost", "smtp-server.xml", "/smtpServer/clientHost/text()", false);
+		alias(aliases, "charset", "smtp-server.xml", "/smtpServer/charset/text()", false);
+		alias(aliases, "username", "smtp-server.xml", "/smtpServer/username/text()", false);
+		alias(aliases, "password", "smtp-server.xml", "/smtpServer/password/text()", true);
+		alias(aliases, "loginMethod", "smtp-server.xml", "/smtpServer/loginMethod/text()", false);
+		alias(aliases, "implicitSSL", "smtp-server.xml", "/smtpServer/implicitSSL/text()", false);
+		alias(aliases, "startTls", "smtp-server.xml", "/smtpServer/startTls/text()", false);
+		alias(aliases, "keystore", "smtp-server.xml", "/smtpServer/keystore/text()", false);
+		alias(aliases, "blacklist", "smtp-server.xml", "/smtpServer/blacklist/text()", false);
+		alias(aliases, "overrideToInMime", "smtp-server.xml", "/smtpServer/overrideToInMime/text()", false);
+		alias(aliases, "connectionTimeout", "smtp-server.xml", "/smtpServer/connectionTimeout/text()", false);
+		alias(aliases, "socketTimeout", "smtp-server.xml", "/smtpServer/socketTimeout/text()", false);
 	}
 
 	private static void executor(Map<String, AliasTarget> aliases) {

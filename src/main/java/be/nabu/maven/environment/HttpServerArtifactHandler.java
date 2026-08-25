@@ -30,102 +30,133 @@ public class HttpServerArtifactHandler extends AbstractXmlArtifactHandler {
 			return;
 		}
 		Document document = parse(input);
+		requireRootElement(document, "httpServer");
 		XPath xpath = newXPath();
-		replaceNodeValue(context, node(xpath, document, "/httpServer/enabled/text()"), value(context, "enabled"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpServer/port/text()"), value(context, "port"), false);
+		replaceNodeValue(context, document, xpath, "/httpServer/enabled/text()", value(context, "enabled"), false);
+		replaceNodeValue(context, document, xpath, "/httpServer/port/text()", value(context, "port"), false);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/offlinePort/text()"),
+			document,
+			xpath,
+			"/httpServer/offlinePort/text()",
 			value(context, "offlinePort"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/conversationIdHeaderMapping/text()"),
+			document,
+			xpath,
+			"/httpServer/conversationIdHeaderMapping/text()",
 			value(context, "conversationIdHeaderMapping"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/redirectTo/text()"),
+			document,
+			xpath,
+			"/httpServer/redirectTo/text()",
 			value(context, "redirectTo"),
 			false
 		);
-		replaceNodeValue(context, node(xpath, document, "/httpServer/proxied/text()"), value(context, "proxied"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpServer/nabuProxy/text()"), value(context, "nabuProxy"), false);
+		replaceNodeValue(context, document, xpath, "/httpServer/proxied/text()", value(context, "proxied"), false);
+		replaceNodeValue(context, document, xpath, "/httpServer/nabuProxy/text()", value(context, "nabuProxy"), false);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/proxySecure/text()"),
+			document,
+			xpath,
+			"/httpServer/proxySecure/text()",
 			value(context, "proxySecure"),
 			false
 		);
-		replaceNodeValue(context, node(xpath, document, "/httpServer/proxyPort/text()"), value(context, "proxyPort"), false);
-		replaceNodeValue(context, node(xpath, document, "/httpServer/keystore/text()"), value(context, "keystore"), false);
+		replaceNodeValue(context, document, xpath, "/httpServer/proxyPort/text()", value(context, "proxyPort"), false);
+		replaceNodeValue(context, document, xpath, "/httpServer/keystore/text()", value(context, "keystore"), false);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/sslServerMode/text()"),
+			document,
+			xpath,
+			"/httpServer/sslServerMode/text()",
 			value(context, "sslServerMode"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/maxSizePerRequest/text()"),
+			document,
+			xpath,
+			"/httpServer/maxSizePerRequest/text()",
 			value(context, "maxSizePerRequest"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/ioPoolSize/text()"),
+			document,
+			xpath,
+			"/httpServer/ioPoolSize/text()",
 			value(context, "ioPoolSize"),
 			false
 		);
-		replaceNodeValue(context, node(xpath, document, "/httpServer/poolSize/text()"), value(context, "poolSize"), false);
+		replaceNodeValue(context, document, xpath, "/httpServer/poolSize/text()", value(context, "poolSize"), false);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/maxTotalConnections/text()"),
+			document,
+			xpath,
+			"/httpServer/maxTotalConnections/text()",
 			value(context, "maxTotalConnections"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/maxConnectionsPerClient/text()"),
+			document,
+			xpath,
+			"/httpServer/maxConnectionsPerClient/text()",
 			value(context, "maxConnectionsPerClient"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/idleTimeout/text()"),
+			document,
+			xpath,
+			"/httpServer/idleTimeout/text()",
 			value(context, "idleTimeout"),
 			false
 		);
-		replaceNodeValue(context, node(xpath, document, "/httpServer/lifetime/text()"), value(context, "lifetime"), false);
+		replaceNodeValue(context, document, xpath, "/httpServer/lifetime/text()", value(context, "lifetime"), false);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/maxInitialLineLength/text()"),
+			document,
+			xpath,
+			"/httpServer/maxInitialLineLength/text()",
 			value(context, "maxInitialLineLength"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/maxHeaderSize/text()"),
+			document,
+			xpath,
+			"/httpServer/maxHeaderSize/text()",
 			value(context, "maxHeaderSize"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/maxChunkSize/text()"),
+			document,
+			xpath,
+			"/httpServer/maxChunkSize/text()",
 			value(context, "maxChunkSize"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/readTimeout/text()"),
+			document,
+			xpath,
+			"/httpServer/readTimeout/text()",
 			value(context, "readTimeout"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/httpServer/writeTimeout/text()"),
+			document,
+			xpath,
+			"/httpServer/writeTimeout/text()",
 			value(context, "writeTimeout"),
 			false
 		);

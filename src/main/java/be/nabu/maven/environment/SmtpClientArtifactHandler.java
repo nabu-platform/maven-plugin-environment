@@ -31,55 +31,56 @@ public class SmtpClientArtifactHandler extends AbstractXmlArtifactHandler {
 			return;
 		}
 		Document document = parse(input);
+		requireRootElement(document, "smtpServer");
 		XPath xpath = newXPath();
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/host/text()"), value(context, "host"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/port/text()"), value(context, "port"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/from/text()"), value(context, "from"), false);
+		replaceNodeValue(context, document, xpath, "/smtpServer/host/text()", value(context, "host"), false);
+		replaceNodeValue(context, document, xpath, "/smtpServer/port/text()", value(context, "port"), false);
+		replaceNodeValue(context, document, xpath, "/smtpServer/from/text()", value(context, "from"), false);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/smtpClient/subjectTemplate/text()"),
+			node(xpath, document, "/smtpServer/subjectTemplate/text()"),
 			value(context, "subjectTemplate"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/smtpClient/clientHost/text()"),
+			node(xpath, document, "/smtpServer/clientHost/text()"),
 			value(context, "clientHost"),
 			false
 		);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/charset/text()"), value(context, "charset"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/username/text()"), value(context, "username"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/password/text()"), value(context, "password"), true);
+		replaceNodeValue(context, document, xpath, "/smtpServer/charset/text()", value(context, "charset"), false);
+		replaceNodeValue(context, document, xpath, "/smtpServer/username/text()", value(context, "username"), false);
+		replaceNodeValue(context, document, xpath, "/smtpServer/password/text()", value(context, "password"), true);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/smtpClient/loginMethod/text()"),
+			node(xpath, document, "/smtpServer/loginMethod/text()"),
 			value(context, "loginMethod"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/smtpClient/implicitSSL/text()"),
+			node(xpath, document, "/smtpServer/implicitSSL/text()"),
 			value(context, "implicitSSL"),
 			false
 		);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/startTls/text()"), value(context, "startTls"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/keystore/text()"), value(context, "keystore"), false);
-		replaceNodeValue(context, node(xpath, document, "/smtpClient/blacklist/text()"), value(context, "blacklist"), false);
+		replaceNodeValue(context, document, xpath, "/smtpServer/startTls/text()", value(context, "startTls"), false);
+		replaceNodeValue(context, document, xpath, "/smtpServer/keystore/text()", value(context, "keystore"), false);
+		replaceNodeValue(context, document, xpath, "/smtpServer/blacklist/text()", value(context, "blacklist"), false);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/smtpClient/overrideToInMime/text()"),
+			node(xpath, document, "/smtpServer/overrideToInMime/text()"),
 			value(context, "overrideToInMime"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/smtpClient/connectionTimeout/text()"),
+			node(xpath, document, "/smtpServer/connectionTimeout/text()"),
 			value(context, "connectionTimeout"),
 			false
 		);
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/smtpClient/socketTimeout/text()"),
+			node(xpath, document, "/smtpServer/socketTimeout/text()"),
 			value(context, "socketTimeout"),
 			false
 		);
@@ -96,7 +97,7 @@ public class SmtpClientArtifactHandler extends AbstractXmlArtifactHandler {
 		for (int i = 0; i < list.size(); i++) {
 			replaceNodeValue(
 				context,
-				node(xpath, document, "/smtpClient/" + key + "[" + (i + 1) + "]/text()"),
+				node(xpath, document, "/smtpServer/" + key + "[" + (i + 1) + "]/text()"),
 				list.get(i),
 				false
 			);
