@@ -230,8 +230,8 @@ public final class ArtifactAliases {
 	}
 
 	private static void webApplication(Map<String, AliasTarget> aliases) {
-		alias(aliases, "virtualHost", "webartifact.xml", "/webartifact/virtualHost/text()", false);
-		alias(aliases, "path", "webartifact.xml", "/webartifact/path/text()", false);
+		alias(aliases, "virtualHost", "webartifact.xml", "/webApplication/virtualHost/text()", false);
+		alias(aliases, "path", "webartifact.xml", "/webApplication/path/text()", false);
 	}
 
 	private static void waf(Map<String, AliasTarget> aliases) {

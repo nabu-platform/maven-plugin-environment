@@ -44,14 +44,17 @@ public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
 			return;
 		}
 		Document document = parse(input);
+		requireRootElement(document, "webApplication");
 		XPath xpath = newXPath();
 		replaceNodeValue(
 			context,
-			node(xpath, document, "/webartifact/virtualHost/text()"),
+			document,
+			xpath,
+			"/webApplication/virtualHost/text()",
 			value(context, "virtualHost"),
 			false
 		);
-		replaceNodeValue(context, node(xpath, document, "/webartifact/path/text()"), value(context, "path"), false);
+		replaceNodeValue(context, document, xpath, "/webApplication/path/text()", value(context, "path"), false);
 		write(document, new File(context.getOutputDirectory(), "webartifact.xml"));
 	}
 

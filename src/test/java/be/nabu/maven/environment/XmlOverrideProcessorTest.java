@@ -25,18 +25,16 @@ public class XmlOverrideProcessorTest {
 	}
 
 	@Test
-	public void failsWhenAbsolutePathRootDoesNotMatchDocument() throws Exception {
+	public void absoluteQueryWithoutMatchingRootIsTreatedAsRootRelativePath() throws Exception {
 		File projectDirectory = artifact("configuration", "<configuration/>");
 		Map<String, String> values = new LinkedHashMap<String, String>();
-		values.put("test.configuration:configuration.xml:/wrong/path", "value");
+		values.put("test.configuration:configuration.xml:/links/impersonateEndpoint", "https://example.test/impersonate/{id}");
 
-		try {
-			XmlOverrideProcessor.apply(context(projectDirectory, values));
-			Assert.fail("Expected root mismatch to fail");
-		}
-		catch (ArtifactHandlerException e) {
-			Assert.assertTrue(e.getMessage().contains("Expected root element 'wrong' but found 'configuration'"));
-		}
+		XmlOverrideProcessor.apply(context(projectDirectory, values));
+
+		String output = read(new File(projectDirectory, "configuration/configuration.xml"));
+		Assert.assertTrue(output.contains("<links>"));
+		Assert.assertTrue(output.contains("<impersonateEndpoint>https://example.test/impersonate/{id}</impersonateEndpoint>"));
 	}
 
 	private File artifact(String name, String xml) throws Exception {

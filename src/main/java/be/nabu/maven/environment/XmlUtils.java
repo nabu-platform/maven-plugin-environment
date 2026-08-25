@@ -65,7 +65,12 @@ public final class XmlUtils {
 			int separator = normalized.indexOf('/', 1);
 			String rootSegment = separator < 0 ? normalized.substring(1) : normalized.substring(1, separator);
 			if (isElementName(rootSegment) && !root.getTagName().equals(rootSegment)) {
-				throw new ArtifactHandlerException("Expected root element '" + rootSegment + "' but found '" + root.getTagName() + "'");
+				if (normalized.contains("/text()") || separator > 0) {
+					normalized = "/" + root.getTagName() + normalized;
+				}
+				else {
+					throw new ArtifactHandlerException("Expected root element '" + rootSegment + "' but found '" + root.getTagName() + "'");
+				}
 			}
 		}
 		return normalized;

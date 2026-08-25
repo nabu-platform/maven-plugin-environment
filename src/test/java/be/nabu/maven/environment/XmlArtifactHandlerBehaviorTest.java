@@ -106,6 +106,22 @@ public class XmlArtifactHandlerBehaviorTest {
 		return map;
 	}
 
+	@Test
+	public void webApplicationHandlerSupportsWebApplicationRoot() throws Exception {
+		File projectDirectory = Files.createTempDirectory("web-application").toFile();
+		Files.write(
+			new File(projectDirectory, "webartifact.xml").toPath(),
+			"<webApplication><virtualHost>old.host</virtualHost><path>/old</path></webApplication>".getBytes(StandardCharsets.UTF_8)
+		);
+		EnvironmentBuildContext context = context(projectDirectory, mapOf("virtualHost", "new.host", "path", "/new"));
+
+		new WebApplicationArtifactHandler().apply(context);
+
+		String output = new String(Files.readAllBytes(new File(context.getOutputDirectory(), "webartifact.xml").toPath()), StandardCharsets.UTF_8);
+		Assert.assertTrue(output.contains("<virtualHost>new.host</virtualHost>"));
+		Assert.assertTrue(output.contains("<path>/new</path>"));
+	}
+
 	private static class PassthroughSecretCodec extends SecretCodec {
 		PassthroughSecretCodec(String secret) {
 			super(secret);
