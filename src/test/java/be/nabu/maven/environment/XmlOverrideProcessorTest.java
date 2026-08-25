@@ -12,10 +12,10 @@ import org.junit.Test;
 
 public class XmlOverrideProcessorTest {
 	@Test
-	public void createsMissingParentsForRootRelativeScalarPath() throws Exception {
+	public void createsMissingParentsForExactAbsoluteScalarPath() throws Exception {
 		File projectDirectory = artifact("configuration", "<configuration><existing>true</existing></configuration>");
 		Map<String, String> values = new LinkedHashMap<String, String>();
-		values.put("test.configuration:configuration.xml:links/impersonateEndpoint", "https://example.test/impersonate/{id}");
+		values.put("test.configuration:configuration.xml:/configuration/links/impersonateEndpoint", "https://example.test/impersonate/{id}");
 
 		XmlOverrideProcessor.apply(context(projectDirectory, values));
 
@@ -25,16 +25,18 @@ public class XmlOverrideProcessorTest {
 	}
 
 	@Test
-	public void absoluteQueryWithoutMatchingRootIsTreatedAsRootRelativePath() throws Exception {
+	public void rejectsRelativeExplicitQuery() throws Exception {
 		File projectDirectory = artifact("configuration", "<configuration/>");
 		Map<String, String> values = new LinkedHashMap<String, String>();
-		values.put("test.configuration:configuration.xml:/links/impersonateEndpoint", "https://example.test/impersonate/{id}");
+		values.put("test.configuration:configuration.xml:links/impersonateEndpoint", "https://example.test/impersonate/{id}");
 
-		XmlOverrideProcessor.apply(context(projectDirectory, values));
-
-		String output = read(new File(projectDirectory, "configuration/configuration.xml"));
-		Assert.assertTrue(output.contains("<links>"));
-		Assert.assertTrue(output.contains("<impersonateEndpoint>https://example.test/impersonate/{id}</impersonateEndpoint>"));
+		try {
+			XmlOverrideProcessor.apply(context(projectDirectory, values));
+			Assert.fail("Expected relative explicit query to fail");
+		}
+		catch (ArtifactHandlerException e) {
+			Assert.assertTrue(e.getMessage().contains("Explicit XML override queries must be absolute"));
+		}
 	}
 
 	private File artifact(String name, String xml) throws Exception {

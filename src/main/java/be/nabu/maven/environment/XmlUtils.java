@@ -53,24 +53,18 @@ public final class XmlUtils {
 	}
 
 	public static String normalizeElementPath(Document document, String expression) throws ArtifactHandlerException {
-		Element root = requireRootElement(document);
 		String normalized = expression == null ? "" : expression.trim();
 		if (normalized.isEmpty()) {
 			throw new ArtifactHandlerException("XML path can not be empty");
 		}
 		if (!normalized.startsWith("/")) {
-			normalized = "/" + root.getTagName() + "/" + normalized;
+			throw new ArtifactHandlerException("Explicit XML override queries must be absolute: " + expression);
 		}
-		else if (!normalized.startsWith("//")) {
+		if (!normalized.startsWith("//")) {
 			int separator = normalized.indexOf('/', 1);
 			String rootSegment = separator < 0 ? normalized.substring(1) : normalized.substring(1, separator);
-			if (isElementName(rootSegment) && !root.getTagName().equals(rootSegment)) {
-				if (normalized.contains("/text()") || separator > 0) {
-					normalized = "/" + root.getTagName() + normalized;
-				}
-				else {
-					throw new ArtifactHandlerException("Expected root element '" + rootSegment + "' but found '" + root.getTagName() + "'");
-				}
+			if (isElementName(rootSegment)) {
+				requireRootElement(document, rootSegment);
 			}
 		}
 		return normalized;
