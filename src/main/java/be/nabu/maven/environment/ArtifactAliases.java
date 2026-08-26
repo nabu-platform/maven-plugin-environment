@@ -45,7 +45,7 @@ public final class ArtifactAliases {
 		else if ("be.nabu.eai.module.rest.client.RESTClientManager".equals(artifactType)) {
 			restClient(aliases);
 		}
-		else if ("be.nabu.eai.module.rest.provider.RESTEndpointManager".equals(artifactType)) {
+		else if ("be.nabu.eai.module.rest.client.RESTEndpointManager".equals(artifactType)) {
 			restEndpoint(aliases);
 		}
 		else if ("be.nabu.eai.module.http.client.HTTPClientManager".equals(artifactType)) {
