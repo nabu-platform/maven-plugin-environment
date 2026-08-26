@@ -59,4 +59,16 @@ public class EnvironmentOverrideParserTest {
 		Assert.assertEquals("smtp-server.xml", override.getFileName());
 		Assert.assertEquals("/smtpServer/username/text()", override.getQuery());
 	}
+
+	@Test
+	public void parsesExplicitFileQueryBeforeConsideringDynamicAliases() {
+		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases("be.nabu.eai.module.misc.features.FeatureSetManager");
+		EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(
+			"myBebat.shared.featureSet:feature-set.xml:/features/disabled[1]/text()=TEST",
+			aliases
+		);
+		Assert.assertNotNull(override);
+		Assert.assertEquals("feature-set.xml", override.getFileName());
+		Assert.assertEquals("/features/disabled[1]/text()", override.getQuery());
+	}
 }

@@ -36,10 +36,11 @@ public final class AliasOverrideProcessor {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		for (ArtifactDescriptor artifact : artifacts) {
 			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
+			ArtifactScopedEnvironmentBuildContext scopedContext = new ArtifactScopedEnvironmentBuildContext(context, artifact.getArtifactId(), artifact.getArtifactDirectory());
+			applyDynamicAliases(context, artifact, scopedContext);
 			if (aliases.isEmpty()) {
 				continue;
 			}
-			ArtifactScopedEnvironmentBuildContext scopedContext = new ArtifactScopedEnvironmentBuildContext(context, artifact.getArtifactId(), artifact.getArtifactDirectory());
 			for (Map.Entry<String, AliasTarget> entry : aliases.entrySet()) {
 				String value = EnvironmentValues.scalar(scopedContext, entry.getKey());
 				if (value == null) {
@@ -75,6 +76,49 @@ public final class AliasOverrideProcessor {
 			File outputFile = outputFile(context, entry.getKey());
 			XmlOverrideProcessor.write(outputFile, entry.getValue());
 		}
+	}
+
+	private static void applyDynamicAliases(EnvironmentBuildContext context, ArtifactDescriptor artifact, ArtifactScopedEnvironmentBuildContext scopedContext) throws ArtifactHandlerException {
+		for (Map.Entry<String, String> entry : scopedContext.getProviderValues().entrySet()) {
+			applyDynamicAlias(context, artifact, scopedContext, entry.getKey(), entry.getValue(), "provider");
+		}
+		for (Map.Entry<String, String> entry : scopedContext.getFixedValues().entrySet()) {
+			if (scopedContext.getProviderValues().containsKey(entry.getKey())) {
+				continue;
+			}
+			applyDynamicAlias(context, artifact, scopedContext, entry.getKey(), entry.getValue(), "fixed");
+		}
+	}
+
+	private static void applyDynamicAlias(EnvironmentBuildContext context, ArtifactDescriptor artifact, ArtifactScopedEnvironmentBuildContext scopedContext, String key, String value, String source) throws ArtifactHandlerException {
+		int firstColon = key.indexOf(':');
+		if (firstColon <= 0 || !artifact.getArtifactId().equals(key.substring(0, firstColon).trim())) {
+			return;
+		}
+		String remainder = key.substring(firstColon + 1).trim();
+		if (remainder.isEmpty() || remainder.contains(":")) {
+			return;
+		}
+		DynamicAliasSupport support = DynamicAliasRegistry.find(artifact, remainder);
+		if (support == null) {
+			return;
+		}
+		context.getLog().info("Applying dynamic " + source + " alias for artifact '" + artifact.getArtifactId() + "': " + remainder);
+		ArtifactScopedEnvironmentBuildContext artifactOutputContext = new ArtifactScopedEnvironmentBuildContext(
+			scopedContext.getProjectDirectory(),
+			new File(scopedContext.getOutputDirectory(), scopedContext.getProjectDirectory().toPath().toAbsolutePath().normalize().relativize(artifact.getArtifactDirectory().toPath().toAbsolutePath().normalize()).toString()),
+			scopedContext.getEnvironmentName(),
+			scopedContext.getProviderValues(),
+			scopedContext.getFixedValues(),
+			scopedContext.getSecretCodec(),
+			scopedContext.getOptions(),
+			scopedContext.getLog(),
+			scopedContext.getRootArtifactId(),
+			artifact.getArtifactId(),
+			artifact.getArtifactDirectory()
+		);
+		artifactOutputContext.getOutputDirectory().mkdirs();
+		support.apply(artifactOutputContext, remainder, value);
 	}
 
 	private static File outputFile(EnvironmentBuildContext context, File sourceFile) {

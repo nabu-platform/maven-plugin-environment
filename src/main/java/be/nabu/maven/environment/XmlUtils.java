@@ -28,6 +28,8 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.namespace.QName;
+import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
@@ -50,6 +52,24 @@ public final class XmlUtils {
 			return null;
 		}
 		return node.getAttributes().getNamedItem(attributeName).getNodeValue();
+	}
+
+	public static Document read(File input) throws ArtifactHandlerException {
+		try {
+			return parse(input);
+		}
+		catch (Exception e) {
+			throw new ArtifactHandlerException("Could not parse xml file: " + input, e);
+		}
+	}
+
+	public static Object evaluate(XPath xpath, Object item, String expression, QName returnType) throws ArtifactHandlerException {
+		try {
+			return xpath.evaluate(expression, item, returnType);
+		}
+		catch (Exception e) {
+			throw new ArtifactHandlerException("Could not evaluate xpath: " + expression, e);
+		}
 	}
 
 	public static String normalizeElementPath(Document document, String expression) throws ArtifactHandlerException {

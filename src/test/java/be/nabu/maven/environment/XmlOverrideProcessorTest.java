@@ -87,6 +87,29 @@ public class XmlOverrideProcessorTest {
 		Assert.assertTrue(output.contains("<host>localhost</host>"));
 	}
 
+	@Test
+	public void centralAliasProcessorSupportsDynamicFeatureAliases() throws Exception {
+		File projectDirectory = Files.createTempDirectory("dynamic-feature").toFile();
+		File artifactDirectory = new File(projectDirectory, "shared/featureSet");
+		Assert.assertTrue(artifactDirectory.mkdirs());
+		Files.write(
+			new File(artifactDirectory, "node.xml").toPath(),
+			"<node artifactManager=\"be.nabu.eai.module.misc.features.FeatureSetManager\"/>".getBytes(StandardCharsets.UTF_8)
+		);
+		Files.write(
+			new File(artifactDirectory, "feature-set.xml").toPath(),
+			"<features><disabled>ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION</disabled></features>".getBytes(StandardCharsets.UTF_8)
+		);
+		Map<String, String> values = new LinkedHashMap<String, String>();
+		values.put("test.shared.featureSet:ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION", "true");
+
+		AliasOverrideProcessor.apply(context(projectDirectory, values));
+
+		String output = read(new File(new File(projectDirectory, "out/shared/featureSet"), "feature-set.xml"));
+		Assert.assertTrue(output.contains("<features>ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION</features>"));
+		Assert.assertFalse(output.contains("<disabled>ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION</disabled>"));
+	}
+
 	private String read(File file) throws Exception {
 		return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
 	}

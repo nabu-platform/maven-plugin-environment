@@ -50,6 +50,11 @@ public final class EnvironmentOverrideParser {
 		return parse(line.substring(0, separator), line.substring(separator + 1), aliases);
 	}
 
+	static ParsedOverride parseLine(String key, String value, Map<String, AliasTarget> aliases) {
+		EnvironmentOverride override = parse(key, value, aliases);
+		return new ParsedOverride(key, value, override);
+	}
+
 	private static EnvironmentOverride parse(String key, String value, Map<String, AliasTarget> aliases) {
 		int firstColon = key.indexOf(':');
 		if (firstColon <= 0 || firstColon == key.length() - 1) {
