@@ -29,27 +29,8 @@ public final class ArtifactHandlers {
 	public static List<ArtifactHandler> resolveHandlers(List<String> names) {
 		List<String> requested = names == null || names.isEmpty()
 			? Arrays.asList(
-				"jdbcPool",
 				"webApplication",
-				"configuration",
-				"httpClient",
-				"httpServer",
-				"smtpClient",
-				"restClient",
-				"restEndpoint",
-				"swaggerClient",
-				"wsdlClient",
-				"virtualHost",
-				"executor",
-				"featureSet",
-				"compressor",
-				"hazelcastCluster",
-				"icapVirusScanner",
-				"jwk",
-				"channel",
-				"waf",
-				"odataClient",
-				"wiki"
+				"featureSet"
 			)
 			: names;
 		Map<String, ArtifactHandler> available = availableHandlers();

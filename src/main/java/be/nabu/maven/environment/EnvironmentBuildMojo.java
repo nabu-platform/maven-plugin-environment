@@ -112,6 +112,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			}
 		}
 		try {
+			AliasOverrideProcessor.apply(context);
 			XmlOverrideProcessor.apply(context);
 		}
 		catch (ArtifactHandlerException e) {

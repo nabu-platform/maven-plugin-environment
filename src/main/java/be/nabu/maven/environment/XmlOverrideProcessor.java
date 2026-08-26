@@ -123,7 +123,7 @@ public final class XmlOverrideProcessor {
 		return overrides;
 	}
 
-	private static Document parse(File file) throws ArtifactHandlerException {
+	static Document parse(File file) throws ArtifactHandlerException {
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setNamespaceAware(false);
@@ -137,7 +137,7 @@ public final class XmlOverrideProcessor {
 		}
 	}
 
-	private static void write(File file, Document document) throws ArtifactHandlerException {
+	static void write(File file, Document document) throws ArtifactHandlerException {
 		try {
 			XmlUtils.write(document, file);
 		}
@@ -146,7 +146,7 @@ public final class XmlOverrideProcessor {
 		}
 	}
 
-	private static void applyOverride(EnvironmentBuildContext context, Document document, XPath xpath, EnvironmentOverride override) throws ArtifactHandlerException {
+	static void applyOverride(EnvironmentBuildContext context, Document document, XPath xpath, EnvironmentOverride override) throws ArtifactHandlerException {
 		String query = XmlUtils.normalizeElementPath(document, override.getQuery());
 		String value = override.getValue();
 		if (query.endsWith("[?]")) {
@@ -279,7 +279,7 @@ public final class XmlOverrideProcessor {
 		}
 	}
 
-	private static void encryptKnownSecrets(EnvironmentBuildContext context, Document document, XPath xpath, List<AliasTarget> encryptedTargets) throws ArtifactHandlerException {
+	static void encryptKnownSecrets(EnvironmentBuildContext context, Document document, XPath xpath, List<AliasTarget> encryptedTargets) throws ArtifactHandlerException {
 		for (AliasTarget aliasTarget : encryptedTargets) {
 			NodeList nodes = nodes(xpath, document, aliasTarget.getQuery());
 			for (int i = 0; i < nodes.getLength(); i++) {

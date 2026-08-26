@@ -65,6 +65,28 @@ public class XmlOverrideProcessorTest {
 		);
 	}
 
+	@Test
+	public void centralAliasProcessorCreatesMissingVirtualHostScalar() throws Exception {
+		File projectDirectory = Files.createTempDirectory("alias-overrides").toFile();
+		File artifactDirectory = new File(projectDirectory, "documents/host");
+		Assert.assertTrue(artifactDirectory.mkdirs());
+		Files.write(
+			new File(artifactDirectory, "node.xml").toPath(),
+			"<node artifactManager=\"be.nabu.eai.module.http.virtual.VirtualHostManager\"/>".getBytes(StandardCharsets.UTF_8)
+		);
+		Files.write(
+			new File(artifactDirectory, "virtual-host.xml").toPath(),
+			"<virtualHost><server>bebatOne.documents.server</server></virtualHost>".getBytes(StandardCharsets.UTF_8)
+		);
+		Map<String, String> values = new LinkedHashMap<String, String>();
+		values.put("test.documents.host:host", "localhost");
+
+		AliasOverrideProcessor.apply(context(projectDirectory, values));
+
+		String output = read(new File(new File(projectDirectory, "out/documents/host"), "virtual-host.xml"));
+		Assert.assertTrue(output.contains("<host>localhost</host>"));
+	}
+
 	private String read(File file) throws Exception {
 		return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
 	}
