@@ -40,10 +40,9 @@ public final class XmlOverrideProcessor {
 	public static void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
 		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(context.getProjectDirectory(), context.getRootArtifactId());
 		Map<String, ArtifactDescriptor> artifactsById = new LinkedHashMap<String, ArtifactDescriptor>();
-		context.getLog().info("Discovered " + artifacts.size() + " artifact(s) under project root " + context.getProjectDirectory().getAbsolutePath());
+		context.getLog().debug("Discovered " + artifacts.size() + " artifact(s) under project root " + context.getProjectDirectory().getAbsolutePath());
 		for (ArtifactDescriptor artifact : artifacts) {
 			artifactsById.put(artifact.getArtifactId(), artifact);
-			context.getLog().info("Artifact descriptor: id='" + artifact.getArtifactId() + "' type='" + artifact.getArtifactType() + "' dir='" + artifact.getArtifactDirectory().getAbsolutePath() + "'");
 		}
 
 		Map<File, Document> documentsByFile = new LinkedHashMap<File, Document>();
@@ -60,7 +59,6 @@ public final class XmlOverrideProcessor {
 				continue;
 			}
 			File targetFile = new File(artifact.getArtifactDirectory(), override.getFileName());
-			context.getLog().info("Resolved override target file for artifact '" + override.getArtifactId() + "': " + targetFile.getAbsolutePath() + " (exists=" + targetFile.exists() + ")");
 			Document document = documentsByFile.get(targetFile);
 			if (document == null) {
 				document = parse(targetFile);
@@ -120,7 +118,7 @@ public final class XmlOverrideProcessor {
 				context.getLog().warn("Could not parse " + source + " override key: " + key);
 				continue;
 			}
-			context.getLog().info("Parsed " + source + " override: " + key + " -> " + override.getFileName() + ":" + override.getQuery());
+			context.getLog().info("Parsed " + source + " explicit override key='" + key + "' target='" + artifactId + ":" + override.getFileName() + ":" + override.getQuery() + "'");
 			overrides.add(override);
 		}
 		return overrides;

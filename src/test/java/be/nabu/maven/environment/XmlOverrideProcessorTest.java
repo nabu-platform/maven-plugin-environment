@@ -112,6 +112,34 @@ public class XmlOverrideProcessorTest {
 		Assert.assertFalse(output.contains("<disabled>ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION</disabled>"));
 	}
 
+	@Test
+	public void qualifiedFixedValueReportsItsSource() throws Exception {
+		File projectDirectory = Files.createTempDirectory("resolved-source").toFile();
+		Map<String, String> fixedValues = new LinkedHashMap<String, String>();
+		fixedValues.put("test.connection:username", "configured-user");
+		EnvironmentBuildContext parent = context(projectDirectory, Collections.<String, String>emptyMap());
+		EnvironmentBuildContext context = new EnvironmentBuildContext(
+			parent.getProjectDirectory(),
+			parent.getOutputDirectory(),
+			parent.getEnvironmentName(),
+			parent.getProviderValues(),
+			fixedValues,
+			parent.getSecretCodec(),
+			parent.getOptions(),
+			parent.getLog(),
+			parent.getRootArtifactId()
+		);
+		ResolvedEnvironmentValue resolved = EnvironmentValues.resolveScalar(
+			new ArtifactScopedEnvironmentBuildContext(context, "test.connection", projectDirectory),
+			"username"
+		);
+
+		Assert.assertNotNull(resolved);
+		Assert.assertEquals("test.connection:username", resolved.getKey());
+		Assert.assertEquals("configured-user", resolved.getValue());
+		Assert.assertEquals("qualified fixed", resolved.getSource());
+	}
+
 	private String read(File file) throws Exception {
 		return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
 	}

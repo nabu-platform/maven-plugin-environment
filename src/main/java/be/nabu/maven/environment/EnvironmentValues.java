@@ -35,19 +35,26 @@ public final class EnvironmentValues {
 	private EnvironmentValues() {}
 
 	public static String scalar(EnvironmentBuildContext context, String key) throws ArtifactHandlerException {
+		ResolvedEnvironmentValue resolved = resolveScalar(context, key);
+		return resolved == null ? null : resolved.getValue();
+	}
+
+	public static ResolvedEnvironmentValue resolveScalar(EnvironmentBuildContext context, String key) throws ArtifactHandlerException {
 		String qualifiedKey = qualifiedKey(context, key);
 		String providerValue = qualifiedKey == null ? null : context.getProviderValues().get(qualifiedKey);
-		if (providerValue == null) {
-			providerValue = context.getProviderValues().get(key);
-		}
 		if (providerValue != null) {
-			return providerValue;
+			return new ResolvedEnvironmentValue(qualifiedKey, providerValue, "qualified provider");
+		}
+		providerValue = context.getProviderValues().get(key);
+		if (providerValue != null) {
+			return new ResolvedEnvironmentValue(key, providerValue, "provider");
 		}
 		String fixedValue = qualifiedKey == null ? null : context.getFixedValues().get(qualifiedKey);
-		if (fixedValue == null) {
-			fixedValue = context.getFixedValues().get(key);
+		if (fixedValue != null) {
+			return new ResolvedEnvironmentValue(qualifiedKey, resolvePlaceholders(context, key, fixedValue), "qualified fixed");
 		}
-		return fixedValue == null ? null : resolvePlaceholders(context, key, fixedValue);
+		fixedValue = context.getFixedValues().get(key);
+		return fixedValue == null ? null : new ResolvedEnvironmentValue(key, resolvePlaceholders(context, key, fixedValue), "fixed");
 	}
 
 	public static List<String> list(EnvironmentBuildContext context, String key, boolean allowCommaSeparatedFallback) throws ArtifactHandlerException {

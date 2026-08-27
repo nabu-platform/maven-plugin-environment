@@ -25,9 +25,7 @@ public final class ArtifactAliases {
 
 	public static Map<String, AliasTarget> resolveAliases(String artifactType) {
 		Map<String, AliasTarget> aliases = new LinkedHashMap<String, AliasTarget>();
-		System.out.println("[environment-plugin] resolving aliases for artifactType=" + artifactType);
 		if (artifactType == null) {
-			System.out.println("[environment-plugin] no artifactType available, alias map is empty");
 			return aliases;
 		}
 		if ("be.nabu.eai.module.jdbc.pool.JDBCPoolManager".equals(artifactType)) {
@@ -90,7 +88,6 @@ public final class ArtifactAliases {
 		else if ("be.nabu.eai.module.wsdl.client.WSDLClientManager".equals(artifactType)) {
 			wsdlClient(aliases);
 		}
-		System.out.println("[environment-plugin] alias keys for artifactType " + artifactType + " = " + aliases.keySet());
 		return aliases;
 	}
 

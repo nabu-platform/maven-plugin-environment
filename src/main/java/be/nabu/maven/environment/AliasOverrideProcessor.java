@@ -43,10 +43,11 @@ public final class AliasOverrideProcessor {
 				continue;
 			}
 			for (Map.Entry<String, AliasTarget> entry : aliases.entrySet()) {
-				String value = EnvironmentValues.scalar(scopedContext, entry.getKey());
-				if (value == null) {
+				ResolvedEnvironmentValue resolved = EnvironmentValues.resolveScalar(scopedContext, entry.getKey());
+				if (resolved == null) {
 					continue;
 				}
+				String value = resolved.getValue();
 				File targetFile = new File(artifact.getArtifactDirectory(), entry.getValue().getFileName());
 				if (!targetFile.exists()) {
 					context.getLog().warn("Resolved alias target file does not exist for artifact '" + artifact.getArtifactId() + "': " + targetFile.getAbsolutePath());
@@ -57,6 +58,10 @@ public final class AliasOverrideProcessor {
 					document = XmlOverrideProcessor.parse(targetFile);
 					documentsByFile.put(targetFile, document);
 				}
+				context.getLog().info(
+					"Applying alias key='" + resolved.getKey() + "' source='" + resolved.getSource() + "' value=" + displayValue(value, entry.getValue().isEncrypted())
+						+ " target='" + artifact.getArtifactId() + ":" + entry.getValue().getFileName() + ":" + entry.getValue().getQuery() + "'"
+				);
 				EnvironmentOverride override = new EnvironmentOverride(artifact.getArtifactId(), entry.getValue().getFileName(), entry.getValue().getQuery(), value);
 				XmlOverrideProcessor.applyOverride(context, document, xpath, override);
 				if (entry.getValue().isEncrypted()) {
@@ -141,6 +146,16 @@ public final class AliasOverrideProcessor {
 		);
 		artifactOutputContext.getOutputDirectory().mkdirs();
 		support.apply(artifactOutputContext, remainder, value);
+	}
+
+	private static String displayValue(String value, boolean encrypted) {
+		if (encrypted) {
+			return "<redacted>";
+		}
+		if (value == null) {
+			return "<null>";
+		}
+		return "'" + value.replace("\r", "\\r").replace("\n", "\\n") + "'";
 	}
 
 	private static File outputFile(EnvironmentBuildContext context, File sourceFile) {
