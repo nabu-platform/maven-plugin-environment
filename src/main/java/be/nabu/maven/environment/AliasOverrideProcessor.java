@@ -37,6 +37,7 @@ public final class AliasOverrideProcessor {
 		for (ArtifactDescriptor artifact : artifacts) {
 			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
 			ArtifactScopedEnvironmentBuildContext scopedContext = new ArtifactScopedEnvironmentBuildContext(context, artifact.getArtifactId(), artifact.getArtifactDirectory());
+			validateAliases(artifact, aliases, scopedContext);
 			applyDynamicAliases(context, artifact, scopedContext);
 			if (aliases.isEmpty()) {
 				continue;
@@ -75,6 +76,27 @@ public final class AliasOverrideProcessor {
 			}
 			File outputFile = outputFile(context, entry.getKey());
 			XmlOverrideProcessor.write(outputFile, entry.getValue());
+		}
+	}
+
+	private static void validateAliases(ArtifactDescriptor artifact, Map<String, AliasTarget> aliases, ArtifactScopedEnvironmentBuildContext scopedContext) throws ArtifactHandlerException {
+		validateAliases(artifact, aliases, scopedContext.getProviderValues());
+		validateAliases(artifact, aliases, scopedContext.getFixedValues());
+	}
+
+	private static void validateAliases(ArtifactDescriptor artifact, Map<String, AliasTarget> aliases, Map<String, String> values) throws ArtifactHandlerException {
+		String prefix = artifact.getArtifactId() + ":";
+		for (String key : values.keySet()) {
+			if (!key.startsWith(prefix)) {
+				continue;
+			}
+			String remainder = key.substring(prefix.length()).trim();
+			if (remainder.isEmpty() || remainder.contains(":")) {
+				continue;
+			}
+			if (!aliases.containsKey(remainder) && DynamicAliasRegistry.find(artifact, remainder) == null) {
+				throw new ArtifactHandlerException("Unknown alias in override key '" + key + "': '" + remainder + "'");
+			}
 		}
 	}
 

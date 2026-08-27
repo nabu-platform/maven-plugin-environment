@@ -103,9 +103,12 @@ public final class XmlOverrideProcessor {
 				context.getLog().warn("Could not find artifact for " + source + " override key: " + key);
 				continue;
 			}
+			String remainder = key.substring(firstColon + 1).trim();
+			if (!remainder.contains(":")) {
+				continue;
+			}
 			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
-			context.getLog().info("Alias keys for artifact '" + artifactId + "': " + aliases.keySet());
-			String resolvedValue = "fixed".equals(source) ? EnvironmentValues.scalar(new ArtifactScopedEnvironmentBuildContext(context, artifactId, artifact.getArtifactDirectory()), key.substring(firstColon + 1).trim()) : entry.getValue();
+			String resolvedValue = "fixed".equals(source) ? EnvironmentValues.scalar(new ArtifactScopedEnvironmentBuildContext(context, artifactId, artifact.getArtifactDirectory()), remainder) : entry.getValue();
 			EnvironmentOverride override;
 			try {
 				override = EnvironmentOverrideParser.parseForTest(key + "=" + resolvedValue, aliases);

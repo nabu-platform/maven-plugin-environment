@@ -103,7 +103,9 @@ public class XmlOverrideProcessorTest {
 		Map<String, String> values = new LinkedHashMap<String, String>();
 		values.put("test.shared.featureSet:ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION", "true");
 
-		AliasOverrideProcessor.apply(context(projectDirectory, values));
+		EnvironmentBuildContext context = context(projectDirectory, values);
+		AliasOverrideProcessor.apply(context);
+		XmlOverrideProcessor.apply(context);
 
 		String output = read(new File(new File(projectDirectory, "out/shared/featureSet"), "feature-set.xml"));
 		Assert.assertTrue(output.contains("<features>ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION</features>"));
