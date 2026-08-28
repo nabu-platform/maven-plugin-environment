@@ -17,9 +17,9 @@ public class XmlOverrideProcessorTest {
 		Map<String, String> values = new LinkedHashMap<String, String>();
 		values.put("test.configuration:configuration.xml:/configuration/links/impersonateEndpoint", "https://example.test/impersonate/{id}");
 
-		XmlOverrideProcessor.apply(context(projectDirectory, values));
+		EnvironmentOverrideEngine.apply(context(projectDirectory, values));
 
-		String output = read(new File(projectDirectory, "configuration/configuration.xml"));
+		String output = read(new File(projectDirectory, "out/configuration/configuration.xml"));
 		Assert.assertTrue(output.contains("<links>"));
 		Assert.assertTrue(output.contains("<impersonateEndpoint>https://example.test/impersonate/{id}</impersonateEndpoint>"));
 	}
@@ -31,7 +31,7 @@ public class XmlOverrideProcessorTest {
 		values.put("test.configuration:configuration.xml:links/impersonateEndpoint", "https://example.test/impersonate/{id}");
 
 		try {
-			XmlOverrideProcessor.apply(context(projectDirectory, values));
+			EnvironmentOverrideEngine.apply(context(projectDirectory, values));
 			Assert.fail("Expected relative explicit query to fail");
 		}
 		catch (ArtifactHandlerException e) {
@@ -81,7 +81,7 @@ public class XmlOverrideProcessorTest {
 		Map<String, String> values = new LinkedHashMap<String, String>();
 		values.put("test.documents.host:host", "localhost");
 
-		AliasOverrideProcessor.apply(context(projectDirectory, values));
+		EnvironmentOverrideEngine.apply(context(projectDirectory, values));
 
 		String output = read(new File(new File(projectDirectory, "out/documents/host"), "virtual-host.xml"));
 		Assert.assertTrue(output.contains("<host>localhost</host>"));
@@ -104,8 +104,7 @@ public class XmlOverrideProcessorTest {
 		values.put("test.shared.featureSet:ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION", "true");
 
 		EnvironmentBuildContext context = context(projectDirectory, values);
-		AliasOverrideProcessor.apply(context);
-		XmlOverrideProcessor.apply(context);
+		EnvironmentOverrideEngine.apply(context);
 
 		String output = read(new File(new File(projectDirectory, "out/shared/featureSet"), "feature-set.xml"));
 		Assert.assertTrue(output.contains("<features>ALLOW_AUTHORIZED_REPRESENTATIVE_CREATION</features>"));

@@ -146,7 +146,7 @@ public final class EnvironmentValues {
 		return artifactId + ":" + key;
 	}
 
-	private static String resolvePlaceholders(EnvironmentBuildContext context, String key, String value) throws ArtifactHandlerException {
+	static String resolvePlaceholders(EnvironmentBuildContext context, String key, String value) throws ArtifactHandlerException {
 		Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
 		StringBuffer buffer = new StringBuffer();
 		while (matcher.find()) {

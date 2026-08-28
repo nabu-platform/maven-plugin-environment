@@ -22,5 +22,5 @@ public interface DynamicAliasSupport {
 
 	boolean supportsAlias(String alias);
 
-	void apply(ArtifactScopedEnvironmentBuildContext context, String alias, String value) throws ArtifactHandlerException;
+	void apply(EnvironmentBuildContext context, OverrideDocumentStore store, ArtifactDescriptor artifact, String alias, String value) throws ArtifactHandlerException;
 }

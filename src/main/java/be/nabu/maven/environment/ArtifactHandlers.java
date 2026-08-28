@@ -28,10 +28,7 @@ public final class ArtifactHandlers {
 
 	public static List<ArtifactHandler> resolveHandlers(List<String> names) {
 		List<String> requested = names == null || names.isEmpty()
-			? Arrays.asList(
-				"webApplication",
-				"featureSet"
-			)
+			? Arrays.asList("webApplication")
 			: names;
 		Map<String, ArtifactHandler> available = availableHandlers();
 		List<ArtifactHandler> handlers = new ArrayList<ArtifactHandler>();

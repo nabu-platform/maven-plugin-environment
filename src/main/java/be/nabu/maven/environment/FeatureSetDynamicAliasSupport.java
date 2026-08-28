@@ -17,7 +17,6 @@
 
 package be.nabu.maven.environment;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.xpath.XPath;
@@ -38,16 +37,11 @@ public class FeatureSetDynamicAliasSupport implements DynamicAliasSupport {
 	}
 
 	@Override
-	public void apply(ArtifactScopedEnvironmentBuildContext context, String alias, String value) throws ArtifactHandlerException {
+	public void apply(EnvironmentBuildContext context, OverrideDocumentStore store, ArtifactDescriptor artifact, String alias, String value) throws ArtifactHandlerException {
 		if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
 			return;
 		}
-		File input = new File(context.getArtifactDirectory(), "feature-set.xml");
-		if (!input.exists()) {
-			context.getLog().debug("Skipping dynamic feature alias, file not found: " + input);
-			return;
-		}
-		Document document = XmlUtils.read(input);
+		Document document = store.document(artifact, "feature-set.xml");
 		XmlUtils.requireRootElement(document, "features");
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		List<String> enabled = values(xpath, document, "/features/features/text()");
@@ -62,12 +56,6 @@ public class FeatureSetDynamicAliasSupport implements DynamicAliasSupport {
 		}
 		rewriteList(document, enabled, "/features/features", "features");
 		rewriteList(document, disabled, "/features/disabled", "disabled");
-		try {
-			XmlUtils.write(document, new File(context.getOutputDirectory(), "feature-set.xml"));
-		}
-		catch (Exception e) {
-			throw new ArtifactHandlerException("Could not write feature set artifact", e);
-		}
 	}
 
 	private List<String> values(XPath xpath, Document document, String expression) throws ArtifactHandlerException {

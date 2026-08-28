@@ -29,12 +29,9 @@ public class ArtifactAliasResolutionTest {
 		}
 		Assert.assertNotNull(jdbc);
 		Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(jdbc.getArtifactType());
-		EnvironmentOverride override = EnvironmentOverrideParser.parseForTest(
-			projectDirectory.getName() + ".databases.main.connection:username=bebatone_qlty",
-			aliases
-		);
-		Assert.assertNotNull(override);
-		Assert.assertEquals("jdbcPool.xml", override.getFileName());
-		Assert.assertEquals("/jdbcPool/username/text()", override.getQuery());
+		AliasTarget target = aliases.get("username");
+		Assert.assertNotNull(target);
+		Assert.assertEquals("jdbcPool.xml", target.getFileName());
+		Assert.assertEquals("/jdbcPool/username/text()", target.getQuery());
 	}
 }

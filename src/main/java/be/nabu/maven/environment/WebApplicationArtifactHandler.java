@@ -32,30 +32,8 @@ public class WebApplicationArtifactHandler extends AbstractXmlArtifactHandler {
 
 	@Override
 	public void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
-		applyWebArtifact(context);
 		applyFragments(context);
 		minifyPageJson(context);
-	}
-
-	private void applyWebArtifact(EnvironmentBuildContext context) throws ArtifactHandlerException {
-		File input = new File(context.getProjectDirectory(), "webartifact.xml");
-		if (!input.exists()) {
-			context.getLog().debug("Skipping web application handler, file not found: " + input);
-			return;
-		}
-		Document document = parse(input);
-		requireRootElement(document, "webApplication");
-		XPath xpath = newXPath();
-		replaceNodeValue(
-			context,
-			document,
-			xpath,
-			"/webApplication/virtualHost/text()",
-			value(context, "virtualHost"),
-			false
-		);
-		replaceNodeValue(context, document, xpath, "/webApplication/path/text()", value(context, "path"), false);
-		write(document, new File(context.getOutputDirectory(), "webartifact.xml"));
 	}
 
 	private void applyFragments(EnvironmentBuildContext context) throws ArtifactHandlerException {

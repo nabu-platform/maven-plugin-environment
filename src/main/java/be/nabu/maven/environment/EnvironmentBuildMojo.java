@@ -39,7 +39,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project.basedir}", required = true, readonly = true)
 	private File projectDirectory;
 
-	@Parameter(defaultValue = "${project.build.directory}/environment-build", required = true)
+	@Parameter(property = "outputDirectory", defaultValue = "${project.build.directory}/environment-build", required = true)
 	private File outputDirectory;
 
 	@Parameter(property = "environment.name", required = true)
@@ -112,8 +112,7 @@ public class EnvironmentBuildMojo extends AbstractMojo {
 			}
 		}
 		try {
-			AliasOverrideProcessor.apply(context);
-			XmlOverrideProcessor.apply(context);
+			EnvironmentOverrideEngine.apply(context);
 		}
 		catch (ArtifactHandlerException e) {
 			throw new MojoExecutionException("Could not apply xml overrides", e);

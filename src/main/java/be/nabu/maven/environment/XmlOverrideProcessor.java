@@ -20,13 +20,10 @@ package be.nabu.maven.environment;
 import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
@@ -36,93 +33,6 @@ import org.xml.sax.InputSource;
 
 public final class XmlOverrideProcessor {
 	private XmlOverrideProcessor() {}
-
-	public static void apply(EnvironmentBuildContext context) throws ArtifactHandlerException {
-		List<ArtifactDescriptor> artifacts = ArtifactIdResolver.resolveArtifacts(context.getProjectDirectory(), context.getRootArtifactId());
-		Map<String, ArtifactDescriptor> artifactsById = new LinkedHashMap<String, ArtifactDescriptor>();
-		context.getLog().debug("Discovered " + artifacts.size() + " artifact(s) under project root " + context.getProjectDirectory().getAbsolutePath());
-		for (ArtifactDescriptor artifact : artifacts) {
-			artifactsById.put(artifact.getArtifactId(), artifact);
-		}
-
-		Map<File, Document> documentsByFile = new LinkedHashMap<File, Document>();
-		Map<File, List<AliasTarget>> encryptedTargetsByFile = new LinkedHashMap<File, List<AliasTarget>>();
-		List<EnvironmentOverride> overrides = new ArrayList<EnvironmentOverride>();
-		overrides.addAll(parseOverrides(context, artifactsById, context.getFixedValues(), "fixed"));
-		overrides.addAll(parseOverrides(context, artifactsById, context.getProviderValues(), "provider"));
-
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		for (EnvironmentOverride override : overrides) {
-			ArtifactDescriptor artifact = artifactsById.get(override.getArtifactId());
-			if (artifact == null) {
-				context.getLog().warn("No artifact descriptor found for override artifact id '" + override.getArtifactId() + "'");
-				continue;
-			}
-			File targetFile = new File(artifact.getArtifactDirectory(), override.getFileName());
-			Document document = documentsByFile.get(targetFile);
-			if (document == null) {
-				document = parse(targetFile);
-				documentsByFile.put(targetFile, document);
-			}
-			applyOverride(context, document, xpath, override);
-			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
-			for (AliasTarget aliasTarget : aliases.values()) {
-				if (aliasTarget.isEncrypted() && override.getFileName().equals(aliasTarget.getFileName())) {
-					List<AliasTarget> encryptedTargets = encryptedTargetsByFile.get(targetFile);
-					if (encryptedTargets == null) {
-						encryptedTargets = new ArrayList<AliasTarget>();
-						encryptedTargetsByFile.put(targetFile, encryptedTargets);
-					}
-					encryptedTargets.add(aliasTarget);
-				}
-			}
-		}
-
-		for (Map.Entry<File, Document> entry : documentsByFile.entrySet()) {
-			List<AliasTarget> encryptedTargets = encryptedTargetsByFile.get(entry.getKey());
-			if (encryptedTargets != null) {
-				encryptKnownSecrets(context, entry.getValue(), xpath, encryptedTargets);
-			}
-			write(entry.getKey(), entry.getValue());
-		}
-	}
-
-	private static List<EnvironmentOverride> parseOverrides(EnvironmentBuildContext context, Map<String, ArtifactDescriptor> artifactsById, Map<String, String> values, String source) throws ArtifactHandlerException {
-		List<EnvironmentOverride> overrides = new ArrayList<EnvironmentOverride>();
-		for (Map.Entry<String, String> entry : values.entrySet()) {
-			String key = entry.getKey();
-			int firstColon = key.indexOf(':');
-			if (firstColon <= 0 || firstColon == key.length() - 1) {
-				continue;
-			}
-			String artifactId = key.substring(0, firstColon).trim();
-			ArtifactDescriptor artifact = artifactsById.get(artifactId);
-			if (artifact == null) {
-				context.getLog().warn("Could not find artifact for " + source + " override key: " + key);
-				continue;
-			}
-			String remainder = key.substring(firstColon + 1).trim();
-			if (!remainder.contains(":")) {
-				continue;
-			}
-			Map<String, AliasTarget> aliases = ArtifactAliases.resolveAliases(artifact.getArtifactType());
-			String resolvedValue = "fixed".equals(source) ? EnvironmentValues.scalar(new ArtifactScopedEnvironmentBuildContext(context, artifactId, artifact.getArtifactDirectory()), remainder) : entry.getValue();
-			EnvironmentOverride override;
-			try {
-				override = EnvironmentOverrideParser.parseForTest(key + "=" + resolvedValue, aliases);
-			}
-			catch (IllegalArgumentException e) {
-				throw new ArtifactHandlerException("Invalid " + source + " override key: " + key, e);
-			}
-			if (override == null) {
-				context.getLog().warn("Could not parse " + source + " override key: " + key);
-				continue;
-			}
-			context.getLog().info("Parsed " + source + " explicit override key='" + key + "' target='" + artifactId + ":" + override.getFileName() + ":" + override.getQuery() + "'");
-			overrides.add(override);
-		}
-		return overrides;
-	}
 
 	static Document parse(File file) throws ArtifactHandlerException {
 		try {
