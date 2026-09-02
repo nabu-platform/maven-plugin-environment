@@ -25,6 +25,33 @@ public class XmlOverrideProcessorTest {
 	}
 
 	@Test
+	public void createsMissingIndexedElementsThroughRequestedIndex() throws Exception {
+		File projectDirectory = artifact("configuration", "<configuration/>");
+		Map<String, String> values = new LinkedHashMap<String, String>();
+		values.put("test.configuration:configuration.xml:/configuration/aliases[2]", "second.example.test");
+
+		EnvironmentOverrideEngine.apply(context(projectDirectory, values));
+
+		String output = read(new File(projectDirectory, "out/configuration/configuration.xml"));
+		Assert.assertTrue(output.contains("<aliases/>"));
+		Assert.assertTrue(output.contains("<aliases>second.example.test</aliases>"));
+	}
+
+	@Test
+	public void createsMissingNestedIndexedElements() throws Exception {
+		File projectDirectory = artifact("configuration", "<configuration/>");
+		Map<String, String> values = new LinkedHashMap<String, String>();
+		values.put("test.configuration:configuration.xml:/configuration/templates[2]/name", "second");
+
+		EnvironmentOverrideEngine.apply(context(projectDirectory, values));
+
+		String output = read(new File(projectDirectory, "out/configuration/configuration.xml"));
+		Assert.assertTrue(output.contains("<templates/>"));
+		Assert.assertTrue(output.contains("<templates>"));
+		Assert.assertTrue(output.contains("<name>second</name>"));
+	}
+
+	@Test
 	public void rejectsRelativeExplicitQuery() throws Exception {
 		File projectDirectory = artifact("configuration", "<configuration/>");
 		Map<String, String> values = new LinkedHashMap<String, String>();

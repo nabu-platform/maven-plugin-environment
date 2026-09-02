@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -38,6 +40,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public final class XmlUtils {
+	private static final Pattern INDEXED_ELEMENT = Pattern.compile("^([^\\[\\]@()]+)\\[([1-9][0-9]*)\\]$");
+
 	private XmlUtils() {}
 
 	public static String readRootText(File input, String expression) throws Exception {
@@ -105,13 +109,16 @@ public final class XmlUtils {
 		Element current = root;
 		for (int i = 1; i < segments.length; i++) {
 			String segment = segments[i];
-			if (!isElementName(segment)) {
+			Matcher indexedElement = INDEXED_ELEMENT.matcher(segment);
+			String name = indexedElement.matches() ? indexedElement.group(1) : segment;
+			if (!isElementName(name)) {
 				throw new ArtifactHandlerException("Can not create missing node for xpath: " + expression);
 			}
-			Element child = firstChild(current, segment);
-			if (child == null) {
-				child = document.createElement(segment);
-				current.appendChild(child);
+			int index = indexedElement.matches() ? Integer.parseInt(indexedElement.group(2)) : 1;
+			Element child = indexedChild(current, name, index);
+			while (child == null) {
+				current.appendChild(document.createElement(name));
+				child = indexedChild(current, name, index);
 			}
 			current = child;
 		}
@@ -146,12 +153,16 @@ public final class XmlUtils {
 		return !segment.isEmpty() && !segment.contains("[") && !segment.contains("@") && !segment.contains("(");
 	}
 
-	private static Element firstChild(Element parent, String name) {
+	private static Element indexedChild(Element parent, String name, int index) {
 		NodeList children = parent.getChildNodes();
+		int currentIndex = 0;
 		for (int i = 0; i < children.getLength(); i++) {
 			Node child = children.item(i);
 			if (child.getNodeType() == Node.ELEMENT_NODE && name.equals(child.getNodeName())) {
-				return (Element) child;
+				currentIndex++;
+				if (currentIndex == index) {
+					return (Element) child;
+				}
 			}
 		}
 		return null;

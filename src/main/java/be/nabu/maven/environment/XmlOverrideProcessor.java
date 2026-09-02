@@ -64,6 +64,7 @@ public final class XmlOverrideProcessor {
 			append(document, xpath, query.substring(0, query.length() - 3), value);
 			return;
 		}
+		boolean indexedTarget = query.matches(".*\\[[1-9][0-9]*\\].*");
 		NodeList nodes = nodes(xpath, document, query);
 		if (nodes.getLength() == 0) {
 			if (value == null || value.trim().isEmpty()) {
@@ -72,12 +73,12 @@ public final class XmlOverrideProcessor {
 			}
 			Node created = XmlUtils.ensureElementPath(document, query);
 			context.getLog().info("Created missing xml path for artifact '" + override.getArtifactId() + "' file '" + override.getFileName() + "' query '" + query + "'");
-			applyValue(document, created, value);
+			applyValue(document, created, value, indexedTarget);
 			return;
 		}
 		context.getLog().info("Applying override to " + nodes.getLength() + " node(s) for artifact '" + override.getArtifactId() + "' file '" + override.getFileName() + "' query '" + query + "'");
 		for (int i = 0; i < nodes.getLength(); i++) {
-			applyValue(document, nodes.item(i), value);
+			applyValue(document, nodes.item(i), value, indexedTarget);
 		}
 	}
 
@@ -95,6 +96,10 @@ public final class XmlOverrideProcessor {
 	}
 
 	private static void applyValue(Document document, Node node, String value) throws ArtifactHandlerException {
+		applyValue(document, node, value, false);
+	}
+
+	private static void applyValue(Document document, Node node, String value, boolean preserveSiblings) throws ArtifactHandlerException {
 		if (value == null || value.trim().isEmpty()) {
 			remove(node);
 			return;
@@ -112,7 +117,12 @@ public final class XmlOverrideProcessor {
 			return;
 		}
 		if (isSimpleElement(node)) {
-			replaceSimpleElementValue(node, value);
+			if (preserveSiblings) {
+				node.setTextContent(value);
+			}
+			else {
+				replaceSimpleElementValue(node, value);
+			}
 			return;
 		}
 		node.setTextContent(value);
