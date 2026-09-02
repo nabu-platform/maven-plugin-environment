@@ -40,7 +40,7 @@ public final class EnvironmentConfigParser {
 					if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("!")) {
 						continue;
 					}
-					int separator = line.indexOf('=');
+					int separator = assignmentSeparator(line);
 					if (separator < 0) {
 						continue;
 					}
@@ -72,6 +72,33 @@ public final class EnvironmentConfigParser {
 			}
 		}
 		return values;
+	}
+
+	private static int assignmentSeparator(String line) {
+		char quote = 0;
+		int bracketDepth = 0;
+		for (int i = 0; i < line.length(); i++) {
+			char character = line.charAt(i);
+			if (quote != 0) {
+				if (character == quote) {
+					quote = 0;
+				}
+				continue;
+			}
+			if (character == '\'' || character == '"') {
+				quote = character;
+			}
+			else if (character == '[') {
+				bracketDepth++;
+			}
+			else if (character == ']') {
+				bracketDepth = Math.max(0, bracketDepth - 1);
+			}
+			else if (character == '=' && bracketDepth == 0) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	private static boolean endsWithContinuation(StringBuilder builder) {

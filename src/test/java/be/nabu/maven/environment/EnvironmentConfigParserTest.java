@@ -9,6 +9,17 @@ import org.junit.Test;
 
 public class EnvironmentConfigParserTest {
 	@Test
+	public void preservesEqualsSignsInsideXpathPredicates() throws Exception {
+		File file = Files.createTempFile("nabu-config", ".properties").toFile();
+		String key = "test.application:fragments.xml:/webFragmentConfigurations/parts[type='password']/configuration/property[@key='password']/text()";
+		Files.write(file.toPath(), (key + "=secret=value\n").getBytes(StandardCharsets.UTF_8));
+
+		Map<String, String> values = EnvironmentConfigParser.parse(file);
+
+		Assert.assertEquals("secret=value", values.get(key));
+	}
+
+	@Test
 	public void preservesMultilineContinuationValues() throws Exception {
 		File file = Files.createTempFile("nabu-config", ".properties").toFile();
 		Files.write(
