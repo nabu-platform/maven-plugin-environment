@@ -142,6 +142,8 @@ public final class ArtifactAliases {
 		alias(aliases, "captureSuccessful", "virtual-host.xml", "/virtualHost/captureSuccessful/text()", false);
 		alias(aliases, "enableRangeSupport", "virtual-host.xml", "/virtualHost/enableRangeSupport/text()", false);
 		alias(aliases, "enableCompression", "virtual-host.xml", "/virtualHost/enableCompression/text()", false);
+		alias(aliases, "aliases", "virtual-host.xml", "/virtualHost/aliases[]", false);
+		alias(aliases, "redirectAliases", "virtual-host.xml", "/virtualHost/redirectAliases[]", false);
 	}
 
 	private static void restEndpoint(Map<String, AliasTarget> aliases) {

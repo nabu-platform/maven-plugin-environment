@@ -115,6 +115,55 @@ public class XmlOverrideProcessorTest {
 	}
 
 	@Test
+	public void virtualHostAliasesReplaceCompleteCollection() throws Exception {
+		File projectDirectory = Files.createTempDirectory("collection-aliases").toFile();
+		File artifactDirectory = new File(projectDirectory, "shared/host");
+		Assert.assertTrue(artifactDirectory.mkdirs());
+		Files.write(
+			new File(artifactDirectory, "node.xml").toPath(),
+			"<node artifactManager=\"be.nabu.eai.module.http.virtual.VirtualHostManager\"/>".getBytes(StandardCharsets.UTF_8)
+		);
+		Files.write(
+			new File(artifactDirectory, "virtual-host.xml").toPath(),
+			"<virtualHost><host>example.test</host><aliases>dev-one</aliases><aliases>dev-two</aliases><aliases>dev-three</aliases><server>test.shared.server</server></virtualHost>".getBytes(StandardCharsets.UTF_8)
+		);
+		Map<String, String> values = new LinkedHashMap<String, String>();
+		values.put("test.shared.host:aliases", " qlty-one, qlty-two ");
+
+		EnvironmentOverrideEngine.apply(context(projectDirectory, values));
+
+		String output = read(new File(new File(projectDirectory, "out/shared/host"), "virtual-host.xml"));
+		Assert.assertTrue(output.contains("<aliases>qlty-one</aliases>"));
+		Assert.assertTrue(output.contains("<aliases>qlty-two</aliases>"));
+		Assert.assertFalse(output.contains("dev-three"));
+		Assert.assertEquals(2, occurrences(output, "<aliases>"));
+		Assert.assertTrue(output.indexOf("<host>") < output.indexOf("<aliases>qlty-one</aliases>"));
+		Assert.assertTrue(output.indexOf("<aliases>qlty-two</aliases>") < output.indexOf("<server>"));
+	}
+
+	@Test
+	public void emptyVirtualHostAliasesRemoveCompleteCollection() throws Exception {
+		File projectDirectory = Files.createTempDirectory("empty-collection-aliases").toFile();
+		File artifactDirectory = new File(projectDirectory, "shared/host");
+		Assert.assertTrue(artifactDirectory.mkdirs());
+		Files.write(
+			new File(artifactDirectory, "node.xml").toPath(),
+			"<node artifactManager=\"be.nabu.eai.module.http.virtual.VirtualHostManager\"/>".getBytes(StandardCharsets.UTF_8)
+		);
+		Files.write(
+			new File(artifactDirectory, "virtual-host.xml").toPath(),
+			"<virtualHost><aliases>dev-one</aliases><aliases>dev-two</aliases></virtualHost>".getBytes(StandardCharsets.UTF_8)
+		);
+		Map<String, String> values = new LinkedHashMap<String, String>();
+		values.put("test.shared.host:aliases", "");
+
+		EnvironmentOverrideEngine.apply(context(projectDirectory, values));
+
+		String output = read(new File(new File(projectDirectory, "out/shared/host"), "virtual-host.xml"));
+		Assert.assertFalse(output.contains("<aliases>"));
+	}
+
+	@Test
 	public void centralAliasProcessorSupportsDynamicFeatureAliases() throws Exception {
 		File projectDirectory = Files.createTempDirectory("dynamic-feature").toFile();
 		File artifactDirectory = new File(projectDirectory, "shared/featureSet");
@@ -164,6 +213,16 @@ public class XmlOverrideProcessorTest {
 		Assert.assertEquals("test.connection:username", resolved.getKey());
 		Assert.assertEquals("configured-user", resolved.getValue());
 		Assert.assertEquals("qualified fixed", resolved.getSource());
+	}
+
+	private int occurrences(String value, String search) {
+		int count = 0;
+		int offset = 0;
+		while ((offset = value.indexOf(search, offset)) >= 0) {
+			count++;
+			offset += search.length();
+		}
+		return count;
 	}
 
 	private String read(File file) throws Exception {

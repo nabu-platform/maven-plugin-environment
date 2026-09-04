@@ -149,7 +149,7 @@ public final class XmlUtils {
 		return root;
 	}
 
-	private static boolean isElementName(String segment) {
+	static boolean isElementName(String segment) {
 		return !segment.isEmpty() && !segment.contains("[") && !segment.contains("@") && !segment.contains("(");
 	}
 

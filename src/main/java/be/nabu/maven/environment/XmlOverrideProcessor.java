@@ -60,6 +60,10 @@ public final class XmlOverrideProcessor {
 	static void applyOverride(EnvironmentBuildContext context, Document document, XPath xpath, EnvironmentOverride override) throws ArtifactHandlerException {
 		String query = XmlUtils.normalizeElementPath(document, override.getQuery());
 		String value = override.getValue();
+		if (query.endsWith("[]")) {
+			replaceCollection(document, xpath, query.substring(0, query.length() - 2), value);
+			return;
+		}
 		if (query.endsWith("[?]")) {
 			append(document, xpath, query.substring(0, query.length() - 3), value);
 			return;
@@ -79,6 +83,37 @@ public final class XmlOverrideProcessor {
 		context.getLog().info("Applying override to " + nodes.getLength() + " node(s) for artifact '" + override.getArtifactId() + "' file '" + override.getFileName() + "' query '" + query + "'");
 		for (int i = 0; i < nodes.getLength(); i++) {
 			applyValue(document, nodes.item(i), value, indexedTarget);
+		}
+	}
+
+	private static void replaceCollection(Document document, XPath xpath, String query, String value) throws ArtifactHandlerException {
+		int separator = query.lastIndexOf('/');
+		if (separator <= 0 || separator == query.length() - 1) {
+			throw new ArtifactHandlerException("Invalid collection xpath: " + query + "[]");
+		}
+		Node parent = node(xpath, document, query.substring(0, separator));
+		if (parent == null) {
+			throw new ArtifactHandlerException("Could not replace xml collection, parent query did not match: " + query.substring(0, separator));
+		}
+		String elementName = query.substring(separator + 1);
+		if (!XmlUtils.isElementName(elementName)) {
+			throw new ArtifactHandlerException("Invalid collection element name: " + elementName);
+		}
+		NodeList existing = nodes(xpath, document, query);
+		Node insertionPoint = existing.getLength() == 0 ? null : existing.item(existing.getLength() - 1).getNextSibling();
+		for (int i = existing.getLength() - 1; i >= 0; i--) {
+			parent.removeChild(existing.item(i));
+		}
+		if (value == null || value.trim().isEmpty()) {
+			return;
+		}
+		for (String item : value.split(",")) {
+			String trimmed = item.trim();
+			if (!trimmed.isEmpty()) {
+				Node child = document.createElement(elementName);
+				child.setTextContent(trimmed);
+				parent.insertBefore(child, insertionPoint);
+			}
 		}
 	}
 
